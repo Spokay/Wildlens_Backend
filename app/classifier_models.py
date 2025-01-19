@@ -1,12 +1,10 @@
-import keras
+import tensorflow as tf
 
-from app.config import WILDLEN_FOOTPRINT_BINARY_CLASSIFIER_MODEL_PATH, \
-    WILDLEN_FOOTPRINT_MULTICLASS_CLASSIFIER_MODEL_PATH
+from app.config import WILDLENS_FOOTPRINT_BINARY_CLASSIFIER_MODEL_PATH, \
+    WILDLENS_FOOTPRINT_MULTICLASS_CLASSIFIER_MODEL_PATH
 
-binary_classifier_model = keras.models.Model()
+# Model which predicts whether an image contains a footprint or not
+binary_classifier_model = tf.keras.models.load_model(WILDLENS_FOOTPRINT_BINARY_CLASSIFIER_MODEL_PATH)
 
-binary_classifier_model.load_weights(WILDLEN_FOOTPRINT_BINARY_CLASSIFIER_MODEL_PATH)
-
-multiclass_classifier_model = keras.models.Model()
-
-multiclass_classifier_model.load_weights(WILDLEN_FOOTPRINT_MULTICLASS_CLASSIFIER_MODEL_PATH)
+# Model which classifies a footprint image into classes of species
+multiclass_classifier_model = tf.keras.models.load_model(WILDLENS_FOOTPRINT_MULTICLASS_CLASSIFIER_MODEL_PATH)
