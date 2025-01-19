@@ -4,3 +4,5 @@ starlette~=0.41.3
 python-dotenv~=1.0.1
 azure-storage-blob~=12.24.0
 azure-identity~=1.19.0
+python-multipart~=0.0.20
+pillow~=11.1.0

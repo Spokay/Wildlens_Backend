@@ -1,21 +1,14 @@
 from fastapi import FastAPI
-from starlette.routing import Router, Mount
-from app.routes.users import routes as users_router
-from app.routes.ai_model import routes as ai_model_router
-app = FastAPI()
 
-router = Router(
-    routes=[
-        Mount("/users", users_router),
-        Mount("/ai_model", ai_model_router),
-    ]
+from .routes import users, ai_model
+
+app = FastAPI(
+    root_path="/api"
 )
 
-app.mount(
-    "/api",
-    router,
-    name="api",
-)
+app.include_router(users.router)
+app.include_router(ai_model.router)
+
 
 if __name__ == "__main__":
     import uvicorn

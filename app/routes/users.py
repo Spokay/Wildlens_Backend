@@ -1,5 +1,9 @@
+from fastapi import APIRouter
 
+router = APIRouter(
+    prefix="/users"
+)
 
-routes = [
-
-]
+@router.post("/register")
+def registrer(request):
+    pass
