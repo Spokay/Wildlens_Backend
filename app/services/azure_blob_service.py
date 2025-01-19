@@ -60,3 +60,6 @@ class AzureBlobService:
             return data
         except Exception as ex:
             raise HTTPException(status_code=404, detail=f"Blob '{blob_name}' not found: {ex}")
+
+
+azure_blob_service = AzureBlobService()
