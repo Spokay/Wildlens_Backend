@@ -4,6 +4,9 @@ from pydantic import BaseModel
 from sqlmodel import SQLModel, Field, Relationship
 
 
+class SpeciePrediction(BaseModel):
+    class_number: int
+    probability: float
 
 
 class Family(SQLModel, table=True):

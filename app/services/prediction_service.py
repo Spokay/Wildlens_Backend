@@ -4,6 +4,7 @@ import numpy as np
 
 from app.classifier_models import binary_classifier_model, multiclass_classifier_model
 from app.config import WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD
+from app.models.specie import SpeciePrediction
 
 
 def assert_content_type_is_valid(content_type: str):
@@ -36,7 +37,7 @@ class PredictionService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error while processing footprint check: {str(e)}")
 
-    def classify_image(self, image_file: UploadFile) -> dict:
+    def classify_image(self, image_file: UploadFile) -> list[SpeciePrediction]:
         try:
             assert_content_type_is_valid(image_file.content_type)
 
@@ -49,16 +50,15 @@ class PredictionService:
             # Perform inference (preprocessing is handled in the model)
             predictions = self.multiclass_classifier_model.predict(input_tensor)
 
-            # Get the class with the highest probability
-            predicted_class = np.argmax(predictions[0])
+            # Get the top 3 predicted classes with their probabilities
+            top_classes = np.argsort(predictions[0])[-3:][::-1]
 
-            # Get the probability of the predicted class
-            predicted_probability = predictions[0][predicted_class]
+            top_probabilities = predictions[0][top_classes]
 
-            return {
-                "class": predicted_class,
-                "probability": predicted_probability
-            }
+            return [
+                SpeciePrediction(class_number=class_number, probability=probability) for class_number, probability in zip(top_classes, top_probabilities)
+            ]
+
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error while processing footprint classification: {str(e)}")
 
