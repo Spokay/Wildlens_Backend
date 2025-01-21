@@ -1,0 +1,15 @@
+meta {
+  name: Predict footprint class
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{BASE_URL}}/api/ai_model/predict
+  body: multipartForm
+  auth: inherit
+}
+
+body:multipart-form {
+  image: @file(C:\Users\hbres\Downloads\ouichef.png)
+}
