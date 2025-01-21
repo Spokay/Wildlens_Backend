@@ -6,13 +6,11 @@ from fastapi import UploadFile, HTTPException
 
 
 class AzureBlobService:
-    def __init__(self):
+    def __init__(self, account_name: str, account_key: str, container_name: str):
 
         # Azure Blob storage client initialization
         try:
-            account_name = os.getenv('AZURE_STORAGE_ACCOUNT_NAME')
-            account_key = os.getenv('AZURE_STORAGE_ACCOUNT_KEY')
-            self.container_name = os.getenv('AZURE_STORAGE_CONTAINER_NAME')
+            self.container_name = container_name
 
             self.connection_string = (
                 f"DefaultEndpointsProtocol=https;AccountName={account_name};"
@@ -62,4 +60,8 @@ class AzureBlobService:
             raise HTTPException(status_code=404, detail=f"Blob '{blob_name}' not found: {ex}")
 
 
-azure_blob_service = AzureBlobService()
+azure_blob_service = AzureBlobService(
+        account_name=os.getenv('AZURE_STORAGE_ACCOUNT_NAME'),
+        account_key=os.getenv('AZURE_STORAGE_ACCOUNT_KEY'),
+        container_name=os.getenv('AZURE_STORAGE_CONTAINER_NAME')
+)
