@@ -3,11 +3,12 @@ from typing import Optional
 from pydantic import BaseModel
 from sqlmodel import SQLModel, Field, Relationship
 
+from app.models.photos import Identification
+
 
 class SpeciePrediction(BaseModel):
     class_number: int
     probability: float
-
 
 class Family(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -29,9 +30,10 @@ class Specie(SQLModel, table=True):
     family_id: int = Field(foreign_key="family.id")
     family: Family = Relationship(back_populates="species")
     habitats: list["Habitat"] = Relationship(back_populates="species", link_model=SpecieHabitat)
+    users: list["User"] = Relationship(back_populates="species", link_model=Identification)
 
 class Habitat(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
     description: Optional[str] = None
-    species: list[Specie] = Relationship(back_populates="habitats", link_model=SpecieHabitat)
+    species: list["Specie"] = Relationship(back_populates="habitats", link_model=SpecieHabitat)

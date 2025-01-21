@@ -1,12 +1,15 @@
 from contextlib import asynccontextmanager
 
+import uvicorn
 from fastapi import FastAPI, Depends
 from sqlalchemy.sql.annotation import Annotated
 from sqlmodel import SQLModel, Session
-
-from app.classifier_models import load_models
 from app.config import database_engine
-from .routes import users, ai_model
+from app.models.photos import Identification
+from app.models.specie import Family, Habitat, Specie, SpecieHabitat
+from app.models.user import Role, User
+from app.services.azure_blob_service import load_azure_blob_service
+from app.routes import users, ai_model
 
 
 def create_db_and_tables():
@@ -24,8 +27,16 @@ SessionDep = Annotated[Session, Depends(get_session)]
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Executed before startup (setup):
-    load_models()
-    create_db_and_tables()
+    load_azure_blob_service()
+    SQLModel.metadata.create_all(database_engine, tables=[
+        Role.__table__,
+        Family.__table__,
+        Habitat.__table__,
+        Specie.__table__,
+        User.__table__,
+        SpecieHabitat.__table__,
+        Identification.__table__,
+    ])
     # ------------------------------
     yield # <--- This is where the context manager pauses and the application starts
     # ------------------------------
@@ -43,5 +54,4 @@ app.include_router(ai_model.router)
 
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
