@@ -28,8 +28,12 @@ class PredictionService:
 
             input_tensor = np.expand_dims(image_array, axis=0)
 
+            print(input_tensor.shape)
+
             # Perform inference (preprocessing is handled in the model)
             predictions = self.binary_classifier_model.predict(input_tensor)
+
+            print(predictions)
 
             # Return True if the model predicts a footprint, False otherwise
             return predictions[0][0] >= WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD
@@ -47,8 +51,12 @@ class PredictionService:
 
             input_tensor = np.expand_dims(image_array, axis=0)
 
+            print(input_tensor.shape)
+
             # Perform inference (preprocessing is handled in the model)
             predictions = self.multiclass_classifier_model.predict(input_tensor)
+
+            print(predictions)
 
             # Get the top 3 predicted classes with their probabilities
             top_classes = np.argsort(predictions[0])[-3:][::-1]

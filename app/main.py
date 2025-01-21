@@ -2,13 +2,12 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI, Depends
-from sqlalchemy.sql.annotation import Annotated
+from typing import Annotated
 from sqlmodel import SQLModel, Session
 from app.config import database_engine
 from app.models.photos import Identification
 from app.models.specie import Family, Habitat, Specie, SpecieHabitat
 from app.models.user import Role, User
-from app.services.azure_blob_service import load_azure_blob_service
 from app.routes import users, ai_model
 
 
@@ -27,7 +26,6 @@ SessionDep = Annotated[Session, Depends(get_session)]
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Executed before startup (setup):
-    load_azure_blob_service()
     SQLModel.metadata.create_all(database_engine, tables=[
         Role.__table__,
         Family.__table__,
