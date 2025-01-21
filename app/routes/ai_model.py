@@ -1,4 +1,4 @@
-from fastapi import UploadFile, APIRouter
+from fastapi import UploadFile, APIRouter, HTTPException
 from starlette.responses import JSONResponse
 
 from app.services.azure_blob_service import azure_blob_service
@@ -9,12 +9,18 @@ router = APIRouter(
     prefix="/ai_model"
 )
 
+def assert_content_type_is_valid(content_type: str):
+    if content_type not in ["image/jpeg", "image/png"]:
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload a JPEG or PNG image.")
 
 @router.post(
     "/predict",
     description="predict the class of an image",
 )
-def predict_image_class(image: UploadFile) -> JSONResponse:
+async def predict_image_class(image: UploadFile) -> JSONResponse:
+
+    assert_content_type_is_valid(image.content_type)
+
     # 1. check if the image is a footprint
     if prediction_service.check_image_for_footprint(image):
 

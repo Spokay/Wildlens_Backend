@@ -7,21 +7,14 @@ from app.config import WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD
 from app.models.specie import SpeciePrediction
 
 
-def assert_content_type_is_valid(content_type: str):
-    if content_type not in ["image/jpeg", "image/png"]:
-        raise HTTPException(status_code=400, detail="Invalid file type. Please upload a JPEG or PNG image.")
-
-
 class PredictionService:
-    def __init__(self):
-        self.binary_classifier_model = binary_classifier_model
-        self.multiclass_classifier_model = multiclass_classifier_model
+    def __init__(self, binary_classifier, multiclass_classifier):
+        self.binary_classifier_model = binary_classifier
+        self.multiclass_classifier_model = multiclass_classifier
 
 
     def check_image_for_footprint(self, image_file: UploadFile) -> bool:
         try:
-            assert_content_type_is_valid(image_file.content_type)
-
             image = Image.open(image_file.file).convert("RGB")
 
             image_array = np.array(image)
@@ -43,8 +36,6 @@ class PredictionService:
 
     def classify_image(self, image_file: UploadFile) -> list[SpeciePrediction]:
         try:
-            assert_content_type_is_valid(image_file.content_type)
-
             image = Image.open(image_file.file).convert("RGB")
 
             image_array = np.array(image)
@@ -72,4 +63,7 @@ class PredictionService:
 
 
 
-prediction_service = PredictionService()
+prediction_service = PredictionService(
+    binary_classifier=binary_classifier_model,
+    multiclass_classifier=multiclass_classifier_model
+)
