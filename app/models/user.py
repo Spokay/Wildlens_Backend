@@ -13,6 +13,11 @@ class Role(SQLModel, table=True):
     users: list["User"] = Relationship(back_populates="role")
 
 
+class UserBadge(SQLModel, table=True):
+    user_id: int = Field(foreign_key="user.id", primary_key=True)
+    badge_id: int = Field(foreign_key="badge.id", primary_key=True)
+    date_awarded: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
+
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(index=True)
@@ -20,7 +25,14 @@ class User(SQLModel, table=True):
     disabled: Optional[bool] = False
     created_at: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
     updated_at: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
-    last_login: Optional[dt.datetime] = Field(default=dt.datetime.now(dt.UTC))
     role_id: int = Field(foreign_key="role.id")
     role: Role = Relationship(back_populates="users")
     species: list["Specie"] = Relationship(back_populates="users", link_model=Identification)
+    badges: list["Badge"] = Relationship(back_populates="users", link_model=UserBadge)
+
+
+class Badge(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(index=True)
+    description: Optional[str] = Field(default=None)
+    users: list["User"] = Relationship(back_populates="badges", link_model=UserBadge)
