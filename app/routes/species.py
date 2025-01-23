@@ -1,9 +1,10 @@
 from fastapi import UploadFile, APIRouter, HTTPException
+from sqlmodel import Session
 from starlette.responses import JSONResponse
 
 from app.services.azure_blob_service import azure_blob_service
 from app.services.prediction_service import prediction_service
-from app.services.specie_service import get_specie_by_class_number, get_species_responses
+from app.services.specie_service import get_specie_by_class_number, get_species_responses, get_specie_response
 
 router = APIRouter(
     prefix="/species"
@@ -15,9 +16,9 @@ def assert_content_type_is_valid(content_type: str):
 
 @router.post(
     "/predict",
-    description="predict the class of an image",
+    description="predicts the class of an image",
 )
-async def predict_image_class(image: UploadFile) -> JSONResponse:
+async def predict_image_class(image: UploadFile, session : Session) -> JSONResponse:
 
     assert_content_type_is_valid(image.content_type)
 
@@ -31,7 +32,7 @@ async def predict_image_class(image: UploadFile) -> JSONResponse:
         azure_blob_service.upload_file(image)
 
         # 4. get the associated species data for each predicted class
-        species = [get_specie_by_class_number(prediction.class_number) for prediction in species_predictions]
+        species = [get_specie_by_class_number(prediction.class_number, session) for prediction in species_predictions]
 
         # 5. prepare the response
         species_response = get_species_responses(species, species_predictions)
@@ -44,3 +45,18 @@ async def predict_image_class(image: UploadFile) -> JSONResponse:
         return JSONResponse({
             "message": "L'image n'est pas une empreinte",
         },422)
+
+
+@router.get(
+    "/{class_number}",
+    description="get the species data associated with a class number",
+)
+async def get_specie_by_class_number(class_number: int, session: Session) -> JSONResponse:
+    specie = get_specie_by_class_number(class_number, session)
+
+    specie_response = get_specie_response(specie)
+
+    return JSONResponse(
+        {"specie": specie_response},
+        200
+    )

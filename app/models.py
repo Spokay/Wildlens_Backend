@@ -1,12 +1,11 @@
 import datetime as dt
-from typing import Optional
 
-from sqlalchemy import String, UniqueConstraint, Column
+from sqlalchemy import String, Column
 from sqlmodel import SQLModel, Field, Relationship
 
 
 class Family(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int = Field(default=None, primary_key=True)
     name: str = Field(sa_column=Column(String(255), index=True))
     species: list["Specie"] = Relationship(back_populates="family")
 
@@ -21,27 +20,27 @@ class Identification(SQLModel, table=True):
     file_storage_key: str = Field(sa_column=Column(String(255), unique=True))
 
 class Specie(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int = Field(default=None, primary_key=True)
     name: str = Field(sa_column=Column(String(255), index=True))
-    latin_name: Optional[str] = None
-    description: Optional[str] = None
-    size: Optional[str] = None
-    region: Optional[str] = None
-    fun_fact: Optional[str] = None
+    latin_name: str = Field(default=None)
+    description: str = Field(default=None)
+    size: str = Field(default=None)
+    region: str = Field(default=None)
+    fun_fact: str = Field(default=None)
     family_id: int = Field(foreign_key="family.id")
     family: "Family" = Relationship(back_populates="species")
     habitats: list["Habitat"] = Relationship(back_populates="species", link_model=SpecieHabitat)
     users: list["User"] = Relationship(back_populates="species", link_model=Identification)
 
 class Habitat(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int = Field(default=None, primary_key=True)
     name: str = Field(sa_column=Column(String(255), index=True))
-    description: Optional[str] = None
+    description: str = None
     species: list["Specie"] = Relationship(back_populates="habitats", link_model=SpecieHabitat)
 
 
 class Role(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int = Field(default=None, primary_key=True)
     name: str = Field(sa_column=Column(String(255), index=True))
     users: list["User"] = Relationship(back_populates="role")
 
@@ -52,10 +51,10 @@ class UserBadge(SQLModel, table=True):
     date_awarded: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
 
 class User(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int = Field(default=None, primary_key=True)
     email: str = Field(sa_column=Column(String(255), index=True))
     password: str
-    disabled: Optional[bool] = False
+    disabled: bool = Field(default=False)
     created_at: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
     updated_at: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
     role_id: int = Field(foreign_key="role.id")
@@ -65,7 +64,7 @@ class User(SQLModel, table=True):
 
 
 class Badge(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int = Field(default=None, primary_key=True)
     name: str = Field(sa_column=Column(String(255), index=True))
-    description: Optional[str] = Field(default=None)
+    description: str = Field(default=None)
     users: list["User"] = Relationship(back_populates="badges", link_model=UserBadge)
