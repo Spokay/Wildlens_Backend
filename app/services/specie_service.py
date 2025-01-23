@@ -1,5 +1,5 @@
-from app.models.response import SpecieResponse
-from app.models.specie import Specie, SpeciePrediction
+from app.dto.species import SpeciePrediction, SpecieResponse
+from app.models import Specie
 
 
 def get_species_responses(species: list[Specie], predictions: list[SpeciePrediction]) -> list[SpecieResponse]:

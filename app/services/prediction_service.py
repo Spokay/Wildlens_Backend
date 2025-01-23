@@ -7,7 +7,7 @@ from numpy import ndarray, dtype, generic
 
 from app.classifier_models import binary_classifier_model, multiclass_classifier_model
 from app.config import WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD
-from app.models.specie import SpeciePrediction
+from app.dto.species import SpeciePrediction
 
 
 def prepare_input_tensor(image_file: UploadFile) -> ndarray[Any, dtype[generic | Any]]:

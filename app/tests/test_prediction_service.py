@@ -8,7 +8,7 @@ from PIL import Image
 from fastapi import UploadFile
 
 from app.config import WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD
-from app.models.specie import SpeciePrediction
+from app.dto.species import SpeciePrediction
 from app.services.prediction_service import PredictionService, prepare_input_tensor
 
 

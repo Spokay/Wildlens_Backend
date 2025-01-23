@@ -1,0 +1,70 @@
+import datetime as dt
+from typing import Optional
+
+from sqlmodel import SQLModel, Field, Relationship
+
+
+class Family(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(index=True)
+    species: list["Specie"] = Relationship(back_populates="family")
+
+class SpecieHabitat(SQLModel, table=True):
+    specie_id: int = Field(foreign_key="specie.id", primary_key=True)
+    habitat_id: int = Field(foreign_key="habitat.id", primary_key=True)
+
+class Identification(SQLModel, table=True):
+    user_id: int = Field(foreign_key="user.id", primary_key=True)
+    specie_id: int = Field(foreign_key="specie.id", primary_key=True)
+    date_identified: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
+    file_storage_key: str = Field(index=True, unique=True)
+
+class Specie(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(index=True)
+    latin_name: Optional[str] = None
+    description: Optional[str] = None
+    size: Optional[str] = None
+    region: Optional[str] = None
+    fun_fact: Optional[str] = None
+    family_id: int = Field(foreign_key="family.id")
+    family: "Family" = Relationship(back_populates="species")
+    habitats: list["Habitat"] = Relationship(back_populates="species", link_model=SpecieHabitat)
+    users: list["User"] = Relationship(back_populates="species", link_model=Identification)
+
+class Habitat(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(index=True)
+    description: Optional[str] = None
+    species: list["Specie"] = Relationship(back_populates="habitats", link_model=SpecieHabitat)
+
+
+class Role(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(index=True)
+    users: list["User"] = Relationship(back_populates="role")
+
+
+class UserBadge(SQLModel, table=True):
+    user_id: int = Field(foreign_key="user.id", primary_key=True)
+    badge_id: int = Field(foreign_key="badge.id", primary_key=True)
+    date_awarded: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
+
+class User(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    email: str = Field(index=True)
+    password: str
+    disabled: Optional[bool] = False
+    created_at: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
+    updated_at: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
+    role_id: int = Field(foreign_key="role.id")
+    role: "Role" = Relationship(back_populates="users")
+    species: list["Specie"] = Relationship(back_populates="users", link_model=Identification)
+    badges: list["Badge"] = Relationship(back_populates="users", link_model=UserBadge)
+
+
+class Badge(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(index=True)
+    description: Optional[str] = Field(default=None)
+    users: list["User"] = Relationship(back_populates="badges", link_model=UserBadge)

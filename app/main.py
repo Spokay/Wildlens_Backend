@@ -1,46 +1,33 @@
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from contextlib import asynccontextmanager
+from typing import Annotated
 
 import uvicorn
 from fastapi import FastAPI, Depends
-from typing import Annotated
-from sqlmodel import SQLModel, Session
-from app.config import database_engine
-from app.models.photos import Identification
-from app.models.specie import Family, Habitat, Specie, SpecieHabitat
-from app.models.user import Role, User
+from sqlmodel import Session
+
+from app.database import create_db_and_tables, get_session
 from app.routes import users, ai_model
 
-
-def create_db_and_tables():
-    SQLModel.metadata.create_all(database_engine)
-
-
-def get_session():
-    with Session(database_engine) as session:
-        yield session
 
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app_object: FastAPI):
     # Executed before startup (setup):
-    SQLModel.metadata.create_all(database_engine, tables=[
-        Role.__table__,
-        Family.__table__,
-        Habitat.__table__,
-        Specie.__table__,
-        User.__table__,
-        SpecieHabitat.__table__,
-        Identification.__table__,
-    ])
+    create_db_and_tables()
     # ------------------------------
-    yield # <--- This is where the context manager pauses and the application starts
+    yield  # <--- This is where the context manager pauses and the application starts
     # ------------------------------
     # Executed after shutdown (cleanup):
     #
     #
+
 
 app = FastAPI(
     root_path="/api",
@@ -49,7 +36,6 @@ app = FastAPI(
 
 app.include_router(users.router)
 app.include_router(ai_model.router)
-
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
