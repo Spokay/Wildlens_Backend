@@ -6,7 +6,7 @@ from app.services.prediction_service import prediction_service
 from app.services.specie_service import get_specie_by_class_number, get_species_responses
 
 router = APIRouter(
-    prefix="/ai_model"
+    prefix="/species"
 )
 
 def assert_content_type_is_valid(content_type: str):

@@ -1,12 +1,13 @@
 import datetime as dt
 from typing import Optional
 
+from sqlalchemy import String, UniqueConstraint, Column
 from sqlmodel import SQLModel, Field, Relationship
 
 
 class Family(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
+    name: str = Field(sa_column=Column(String(255), index=True))
     species: list["Specie"] = Relationship(back_populates="family")
 
 class SpecieHabitat(SQLModel, table=True):
@@ -17,11 +18,11 @@ class Identification(SQLModel, table=True):
     user_id: int = Field(foreign_key="user.id", primary_key=True)
     specie_id: int = Field(foreign_key="specie.id", primary_key=True)
     date_identified: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
-    file_storage_key: str = Field(index=True, unique=True)
+    file_storage_key: str = Field(sa_column=Column(String(255), unique=True))
 
 class Specie(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
+    name: str = Field(sa_column=Column(String(255), index=True))
     latin_name: Optional[str] = None
     description: Optional[str] = None
     size: Optional[str] = None
@@ -34,14 +35,14 @@ class Specie(SQLModel, table=True):
 
 class Habitat(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
+    name: str = Field(sa_column=Column(String(255), index=True))
     description: Optional[str] = None
     species: list["Specie"] = Relationship(back_populates="habitats", link_model=SpecieHabitat)
 
 
 class Role(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
+    name: str = Field(sa_column=Column(String(255), index=True))
     users: list["User"] = Relationship(back_populates="role")
 
 
@@ -52,7 +53,7 @@ class UserBadge(SQLModel, table=True):
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    email: str = Field(index=True)
+    email: str = Field(sa_column=Column(String(255), index=True))
     password: str
     disabled: Optional[bool] = False
     created_at: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
@@ -65,6 +66,6 @@ class User(SQLModel, table=True):
 
 class Badge(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
+    name: str = Field(sa_column=Column(String(255), index=True))
     description: Optional[str] = Field(default=None)
     users: list["User"] = Relationship(back_populates="badges", link_model=UserBadge)

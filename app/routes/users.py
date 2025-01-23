@@ -7,3 +7,7 @@ router = APIRouter(
 @router.post("/register")
 def registrer(request):
     pass
+
+@router.post("/login")
+def login(request):
+    pass

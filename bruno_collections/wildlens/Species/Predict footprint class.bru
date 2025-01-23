@@ -5,11 +5,11 @@ meta {
 }
 
 post {
-  url: {{BASE_URL}}/api/ai_model/predict
+  url: {{BASE_URL}}/api/species/predict
   body: multipartForm
   auth: inherit
 }
 
 body:multipart-form {
-  image: @file(C:\Users\hbres\Downloads\ouichef.png)
+  image: @file()
 }
