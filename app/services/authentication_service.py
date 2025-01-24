@@ -1,20 +1,24 @@
-from typing import Optional, Annotated
+from functools import wraps
+from typing import Optional
 
-import jwt
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jwt import InvalidTokenError
 from passlib.context import CryptContext
 from sqlmodel import Session, select
 from starlette import status
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 
-from app.database import get_session
+from app.dto.users import AuthenticatedUser
 from app.models import User
-from app.services.token_service import SECRET_KEY, ALGORITHM, TokenData
+from app.services.token_service import decode_access_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+EXCLUDED_PATHS = ["/users/token", "/users/register"]
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -27,34 +31,57 @@ def authenticate_user(session : Session, email: str, password: str):
     user : Optional[User] = session.exec(select(User).where(User.email == email)).first()
     if not user:
         return False
-    if not verify_password(password, user.hashed_password):
+    if not verify_password(password, user.password):
         return False
     return user
 
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], session: Session = Depends(get_session)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-        token_data = TokenData(username=username)
-    except InvalidTokenError:
-        raise credentials_exception
-    user : Optional[User] = session.exec(select(User).where(User.email == token_data.username)).first()
-    if user is None:
-        raise credentials_exception
-    return user
+async def get_current_user(request: Request) -> AuthenticatedUser:
+    user_id = request.state.user_id
+    email = request.state.email
+    role_name = request.state.role_name
+
+    if not user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
+    return AuthenticatedUser(user_id=user_id, email=email, role_name=role_name)
 
 
-async def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)],
-):
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
+class AuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path in EXCLUDED_PATHS:
+            return await call_next(request)
+
+        token = request.headers.get("Authorization").replace("Bearer ", "")
+        if not token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authenticated"
+            )
+
+        try:
+            payload : dict = decode_access_token(token)
+            email = payload.get("sub")
+            user_id = payload.get("user_id")
+            role_name = payload.get("role")
+
+            request.state.user_id = user_id
+            request.state.email = email
+            request.state.role_name = role_name
+
+        except InvalidTokenError:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+        response = await call_next(request)
+        return response
+
+def role_required(role: str):
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(request: Request, *args, **kwargs):
+            user_role = request.state.role_name
+            if user_role != role:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have the required permissions")
+            return await func(request, *args, **kwargs)
+        return wrapper
+    return decorator

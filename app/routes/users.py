@@ -6,14 +6,16 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 from starlette import status
 
+from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.database import get_session
 from app.dto.badge import BadgeResponse
-from app.models import User, Badge
-from app.services.authentication_service import get_current_active_user, authenticate_user
-from app.services.token_service import Token, ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token
+from app.dto.users import AuthenticatedUser
+from app.services.authentication_service import authenticate_user, get_current_user
+from app.services.badge_service import get_user_badges
+from app.services.token_service import Token, create_access_token
 
 router = APIRouter(
-    prefix="/users"
+    prefix="/users",
 )
 
 @router.post("/token")
@@ -30,7 +32,11 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={
+            "sub": user.email,
+            "user_id": user.id,
+            "role": user.role.name
+        }, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
 

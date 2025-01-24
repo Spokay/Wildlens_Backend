@@ -3,11 +3,9 @@ headers {
 }
 
 auth {
-  mode: apikey
+  mode: bearer
 }
 
-auth:apikey {
-  key: WILDLENS_API_KEY
-  value: w^ms2CQq@W!PqM$RQ^7eH3StfF$e9FrdpxcTyee4HsC9
-  placement: header
+auth:bearer {
+  token: {{BEARER_TOKEN}}
 }

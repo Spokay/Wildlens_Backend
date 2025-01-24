@@ -1,4 +1,20 @@
+import os
+
+# AI models
 WILDLENS_FOOTPRINT_MULTICLASS_CLASSIFIER_MODEL_PATH = "cnn_models/wildlens_test.h5"
 WILDLENS_FOOTPRINT_BINARY_CLASSIFIER_MODEL_PATH = "cnn_models/wildlens_test.h5"
 WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD = 0.6
+
+
+# JWT
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+
+if not SECRET_KEY:
+    raise ValueError("JWT_SECRET_KEY not set")
+
+ALGORITHM = os.getenv("JWT_ALGORITHM")
+if not ALGORITHM:
+    raise ValueError("JWT_ALGORITHM not set")
+
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRATION_MINUTES", 30))
 
