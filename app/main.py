@@ -14,7 +14,7 @@ from app.routes import users, species
 
 
 
-SessionDep = Annotated[Session, Depends(get_session(database_engine))]
+SessionDep = Annotated[Session, Depends(get_session)]
 
 
 @asynccontextmanager

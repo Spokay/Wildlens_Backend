@@ -11,6 +11,7 @@ conn_string = f'mssql+pyodbc:///?odbc_connect={params}'
 
 database_engine = create_engine(conn_string, echo=True)
 
+
 def create_db_and_tables(engine):
     SQLModel.metadata.create_all(engine, tables=[
         Role.__table__,
@@ -23,6 +24,7 @@ def create_db_and_tables(engine):
         SpecieHabitat.__table__,
         Identification.__table__,
     ])
+
 
 def get_session():
     with Session(database_engine) as session:
