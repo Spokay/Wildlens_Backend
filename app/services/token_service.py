@@ -10,9 +10,10 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-
 class TokenData(BaseModel):
-    username: str | None = None
+    sub : str
+    user_id: int | None = None
+    role_name: str | None = None
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:

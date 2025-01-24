@@ -35,6 +35,18 @@ def authenticate_user(session : Session, email: str, password: str):
         return False
     return user
 
+def user_exists(session: Session, email: str) -> bool:
+    user : Optional[User] = session.exec(select(User).where(User.email == email)).first()
+    return user is not None
+
+def create_user(session: Session, email: str, password: str) -> User:
+    hashed_password = get_password_hash(password)
+    user = User(email=email, password=hashed_password)
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
+
 
 async def get_current_user(request: Request) -> AuthenticatedUser:
     user_id = request.state.user_id

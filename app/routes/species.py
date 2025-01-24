@@ -2,13 +2,13 @@ from typing import Annotated
 
 from fastapi import UploadFile, APIRouter, HTTPException, Depends
 from sqlmodel import Session
+from starlette import status
 from starlette.responses import JSONResponse
 
 from app.database import get_session
 from app.dto.species import SpecieResponse, SpeciePredictionResponse
 from app.dto.users import AuthenticatedUser
 from app.mappers.specie_mapper import species_to_prediction_responses, specie_to_response
-from app.models import User
 from app.services.authentication_service import get_current_user
 from app.services.azure_blob_service import azure_blob_service
 from app.services.prediction_service import prediction_service
@@ -24,9 +24,9 @@ def assert_content_type_is_valid(content_type: str):
 
 @router.post(
     "/predict",
-    description="predicts the class of an image",
-    response_model=list[SpeciePredictionResponse],
-    status_code=200
+    description="Predicts the class of an image and saves the identification in the database",
+    response_model=list[SpeciePredictionResponse] | JSONResponse,
+    status_code=status.HTTP_200_OK
 )
 async def predict_image_class(
         image: UploadFile,
@@ -62,8 +62,9 @@ async def predict_image_class(
 
 @router.get(
     "/{class_number}",
-    description="get the species data associated with a class number",
-    response_model=SpecieResponse
+    description="Get the species data associated with a class number",
+    response_model=SpecieResponse,
+    status_code=status.HTTP_200_OK
 )
 async def get_specie(
         class_number: int,
