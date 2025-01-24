@@ -5,11 +5,13 @@ from sqlmodel import Session
 from starlette.responses import JSONResponse
 
 from app.database import get_session
+from app.dto.species import SpecieResponse, SpeciePredictionResponse
+from app.mappers.species import species_to_prediction_responses, specie_to_response
 from app.models import User
+from app.services.authentication_service import get_current_active_user
 from app.services.azure_blob_service import azure_blob_service
 from app.services.prediction_service import prediction_service
-from app.services.specie_service import get_specie_by_class_number, get_species_prediction_responses, get_specie_prediction_response, \
-    save_identification
+from app.services.specie_service import get_specie_by_class_number, save_identification
 
 router = APIRouter(
     prefix="/species"
@@ -19,13 +21,14 @@ def assert_content_type_is_valid(content_type: str):
     if content_type not in ["image/jpeg", "image/png"]:
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload a JPEG or PNG image.")
 
-# TODO implement a middleware to inject the authenticated user in the method parameters
 @router.post(
     "/predict",
     description="predicts the class of an image",
+    response_model=list[SpeciePredictionResponse],
+    status_code=200
 )
-async def predict_image_class(image: UploadFile, authenticated_user : Annotated[User, Depends(get_authenticated_user)], session: Session = Depends(get_session)) -> JSONResponse:
-
+async def predict_image_class(image: UploadFile, authenticated_user : Annotated[User, Depends(get_current_active_user)], session: Session = Depends(get_session)) -> \
+list[SpeciePredictionResponse] | JSONResponse:
     assert_content_type_is_valid(image.content_type)
 
     # 1. check if the image is a footprint
@@ -44,12 +47,9 @@ async def predict_image_class(image: UploadFile, authenticated_user : Annotated[
         species = [get_specie_by_class_number(prediction.class_number, session) for prediction in species_predictions]
 
         # 6. prepare the response
-        species_response = get_species_prediction_responses(species, species_predictions)
+        species_response = species_to_prediction_responses(species, species_predictions)
 
-        return JSONResponse(
-            {"species": species_response},
-            200
-        )
+        return species_response
     else:
         return JSONResponse({
             "message": "L'image n'est pas une empreinte",
@@ -59,11 +59,12 @@ async def predict_image_class(image: UploadFile, authenticated_user : Annotated[
 @router.get(
     "/{class_number}",
     description="get the species data associated with a class number",
+    response_model=SpecieResponse
 )
 async def get_specie(class_number: int, session: Session = Depends(get_session)) -> JSONResponse:
     specie = get_specie_by_class_number(class_number, session)
 
-    specie_response = get_specie_prediction_response(specie)
+    specie_response = specie_to_response(specie)
 
     return JSONResponse(
         {"specie": specie_response},

@@ -7,6 +7,7 @@ from sqlmodel import Session
 from starlette import status
 
 from app.database import get_session
+from app.dto.badge import BadgeResponse
 from app.models import User, Badge
 from app.services.authentication_service import get_current_active_user, authenticate_user
 from app.services.token_service import Token, ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token
@@ -36,7 +37,7 @@ async def login_for_access_token(
 @router.get(
     "/me/badges",
     description="get the badges of the current user",
-    response_model=list[Badge]
+    response_model=list[BadgeResponse]
 )
 def get_current_user_badges(user: Annotated[User, Depends(get_current_active_user)]) -> list[Badge]:
     return user.badges
