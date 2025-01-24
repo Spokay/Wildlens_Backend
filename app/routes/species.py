@@ -6,6 +6,7 @@ from starlette.responses import JSONResponse
 
 from app.database import get_session
 from app.dto.species import SpecieResponse, SpeciePredictionResponse
+from app.dto.users import AuthenticatedUser
 from app.mappers.specie_mapper import species_to_prediction_responses, specie_to_response
 from app.models import User
 from app.services.authentication_service import get_current_user
@@ -29,7 +30,7 @@ def assert_content_type_is_valid(content_type: str):
 )
 async def predict_image_class(
         image: UploadFile,
-        authenticated_user : Annotated[User, Depends(get_current_user)],
+        authenticated_user : Annotated[AuthenticatedUser, Depends(get_current_user)],
         session: Session = Depends(get_session)
 ) -> list[SpeciePredictionResponse] | JSONResponse:
     assert_content_type_is_valid(image.content_type)
