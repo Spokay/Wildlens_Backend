@@ -1,8 +1,10 @@
 from typing import Optional
 
-from sqlmodel import Session
+from sqlmodel import Session, select
 
+from app.dto.species import SpecieResponse
 from app.dto.users import AuthenticatedUser
+from app.mappers.specie_mapper import species_to_responses
 from app.models import Specie, Identification
 
 
@@ -20,6 +22,7 @@ def save_identification(
         class_number: int,
         blob_key: str
 ) -> Identification:
+
     identification = Identification(
         user_id=authenticated_user.user_id,
         specie_id=class_number,
@@ -31,5 +34,14 @@ def save_identification(
 
     # TODO: Check if a badge should be awarded to the user here
 
-
     return identification
+
+
+def get_identified_species_by_user(user_id: int, session: Session) -> list[SpecieResponse]:
+    statement = select(Specie).join(Identification).where(Identification.user_id == user_id)
+
+    identified_species = session.exec(statement).all()
+
+    species_response = species_to_responses(identified_species)
+
+    return species_response

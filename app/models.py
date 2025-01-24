@@ -1,6 +1,7 @@
 import datetime as dt
+from typing import Dict, Any
 
-from sqlalchemy import String, Column
+from sqlalchemy import String, Column, JSON
 from sqlmodel import SQLModel, Field, Relationship
 
 
@@ -75,3 +76,11 @@ class Badge(SQLModel, table=True):
     name: str = Field(sa_column=Column(String(255), index=True))
     description: str = Field(default=None)
     users: list["User"] = Relationship(back_populates="badges", link_model=UserBadge)
+
+class BadgeCriteria(SQLModel, table=True):
+    badge_id: int = Field(foreign_key="badge.id", primary_key=True)
+    criteria: Dict = Field(default_factory=dict, sa_column=Column(JSON))
+
+    # Needed for Column(JSON)
+    class Config:
+        arbitrary_types_allowed = True

@@ -31,6 +31,9 @@ def specie_to_response(specie : Specie) -> SpecieResponse:
         habitats=habitats_response
     )
 
+def species_to_responses(species: list[Specie]) -> list[SpecieResponse]:
+    return [specie_to_response(specie) for specie in species]
+
 def specie_to_prediction_response(specie : Specie, probability: float) -> SpeciePredictionResponse:
     family_response = family_to_response(specie.family)
     habitats_response = [habitat_to_response(habitat) for habitat in specie.habitats]

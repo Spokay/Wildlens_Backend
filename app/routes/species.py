@@ -12,7 +12,7 @@ from app.mappers.specie_mapper import species_to_prediction_responses, specie_to
 from app.services.authentication_service import get_current_user
 from app.services.azure_blob_service import azure_blob_service
 from app.services.prediction_service import prediction_service
-from app.services.specie_service import get_specie_by_class_number, save_identification
+from app.services.specie_service import get_specie_by_class_number, save_identification, get_identified_species_by_user
 
 router = APIRouter(
     prefix="/species"
@@ -78,3 +78,18 @@ async def get_specie(
         {"specie": specie_response},
         200
     )
+
+
+@router.get(
+    "/identified/{user_id}",
+    description="Get the species identified by a user",
+    response_model=list[SpecieResponse],
+    status_code=status.HTTP_200_OK
+)
+async def get_identified_species(
+        user_id: int,
+        session: Session = Depends(get_session)
+) -> list[SpecieResponse]:
+    species_identified = get_identified_species_by_user(user_id, session)
+
+    return species_identified

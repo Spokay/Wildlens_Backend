@@ -3,7 +3,8 @@ import os
 from sqlalchemy import create_engine
 from sqlmodel import SQLModel, Session
 
-from app.models import Role, Family, Habitat, Specie, User, Badge, UserBadge, SpecieHabitat, Identification
+from app.models import Role, Family, Habitat, Specie, User, Badge, UserBadge, SpecieHabitat, Identification, \
+    BadgeCriteria
 
 params = os.getenv("AZURE_DATABASE_CONNECTION_PARAMS")
 
@@ -23,7 +24,90 @@ def create_db_and_tables(engine):
         UserBadge.__table__,
         SpecieHabitat.__table__,
         Identification.__table__,
+        BadgeCriteria.__table__
     ])
+
+    # session = Session(engine)
+    #
+    # criteria1 = {
+    #     "type": "identification_count_by_specie",
+    #     "required": 5
+    # }
+    # criteria2 = {
+    #     "type": "identification_count_by_specie",
+    #     "required": 10
+    # }
+    #
+    # criteria3 = {
+    #     "type": "identification_count_by_specie",
+    #     "required": 5,
+    #     "specie": 1
+    # }
+    # criteria4 = {
+    #     "type": "identification_count_by_specie",
+    #     "required": 10,
+    #     "specie": 1
+    # }
+    #
+    # badge = Badge(
+    #     name="Explorateur de la nature",
+    #     description="Décerné pour avoir identifié 5 espèces différentes"
+    # )
+    # badge2 = Badge(
+    #     name="Véteran de la nature",
+    #     description="Décerné pour avoir identifié 10 espèces différentes"
+    # )
+    #
+    # badge3 = Badge(
+    #     name="Amateur de chat",
+    #     description="Décerné pour avoir identifié 5 chats"
+    # )
+    #
+    # badge4 = Badge(
+    #     name="Expert en chat",
+    #     description="Décerné pour avoir identifié 10 chats"
+    # )
+    # session.add(badge)
+    # session.add(badge2)
+    # session.add(badge3)
+    # session.add(badge4)
+    # session.commit()
+    # session.refresh(badge)
+    # session.refresh(badge2)
+    # session.refresh(badge3)
+    # session.refresh(badge4)
+    #
+    # badge_criteria = BadgeCriteria(
+    #     badge_id=badge.id,
+    #     criteria=criteria1
+    # )
+    #
+    # badge_criteria2 = BadgeCriteria(
+    #     badge_id=badge2.id,
+    #     criteria=criteria2
+    # )
+    #
+    # badge_criteria3 = BadgeCriteria(
+    #     badge_id=badge3.id,
+    #     criteria=criteria3
+    # )
+    #
+    # badge_criteria4 = BadgeCriteria(
+    #     badge_id=badge4.id,
+    #     criteria=criteria4
+    # )
+    #
+    # session.add(badge_criteria)
+    # session.add(badge_criteria2)
+    # session.add(badge_criteria3)
+    # session.add(badge_criteria4)
+    # session.commit()
+    # session.refresh(badge_criteria)
+    # session.refresh(badge_criteria2)
+    # session.refresh(badge_criteria3)
+    # session.refresh(badge_criteria4)
+    # session.close()
+
 
 
 def get_session():
