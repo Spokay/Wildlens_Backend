@@ -45,5 +45,9 @@ async def login_for_access_token(
     description="get the badges of the current user",
     response_model=list[BadgeResponse]
 )
-def get_current_user_badges(user: Annotated[User, Depends(get_current_active_user)]) -> list[Badge]:
-    return user.badges
+async def get_current_user_badges(
+        current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
+        session: Session = Depends(get_session)
+) -> list[BadgeResponse]:
+    badge_responses = get_user_badges(current_user.user_id, session)
+    return badge_responses

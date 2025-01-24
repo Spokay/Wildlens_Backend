@@ -6,9 +6,9 @@ from starlette.responses import JSONResponse
 
 from app.database import get_session
 from app.dto.species import SpecieResponse, SpeciePredictionResponse
-from app.mappers.species import species_to_prediction_responses, specie_to_response
+from app.mappers.specie_mapper import species_to_prediction_responses, specie_to_response
 from app.models import User
-from app.services.authentication_service import get_current_active_user
+from app.services.authentication_service import get_current_user
 from app.services.azure_blob_service import azure_blob_service
 from app.services.prediction_service import prediction_service
 from app.services.specie_service import get_specie_by_class_number, save_identification
@@ -27,8 +27,11 @@ def assert_content_type_is_valid(content_type: str):
     response_model=list[SpeciePredictionResponse],
     status_code=200
 )
-async def predict_image_class(image: UploadFile, authenticated_user : Annotated[User, Depends(get_current_active_user)], session: Session = Depends(get_session)) -> \
-list[SpeciePredictionResponse] | JSONResponse:
+async def predict_image_class(
+        image: UploadFile,
+        authenticated_user : Annotated[User, Depends(get_current_user)],
+        session: Session = Depends(get_session)
+) -> list[SpeciePredictionResponse] | JSONResponse:
     assert_content_type_is_valid(image.content_type)
 
     # 1. check if the image is a footprint
@@ -61,7 +64,10 @@ list[SpeciePredictionResponse] | JSONResponse:
     description="get the species data associated with a class number",
     response_model=SpecieResponse
 )
-async def get_specie(class_number: int, session: Session = Depends(get_session)) -> JSONResponse:
+async def get_specie(
+        class_number: int,
+        session: Session = Depends(get_session)
+) -> JSONResponse:
     specie = get_specie_by_class_number(class_number, session)
 
     specie_response = specie_to_response(specie)

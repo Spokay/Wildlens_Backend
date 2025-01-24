@@ -1,0 +1,11 @@
+meta {
+  name: Get User Badges
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{BASE_URL}}/users/me/badges
+  body: none
+  auth: inherit
+}
