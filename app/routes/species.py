@@ -25,7 +25,7 @@ def assert_content_type_is_valid(content_type: str):
 @router.post(
     "/predict",
     description="Predicts the class of an image and saves the identification in the database",
-    response_model=list[SpeciePredictionResponse] | JSONResponse,
+    response_model=list[SpeciePredictionResponse],
     status_code=status.HTTP_200_OK
 )
 async def predict_image_class(

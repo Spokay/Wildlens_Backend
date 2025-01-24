@@ -41,7 +41,7 @@ def user_exists(session: Session, email: str) -> bool:
 
 def create_user(session: Session, email: str, password: str) -> User:
     hashed_password = get_password_hash(password)
-    user = User(email=email, password=hashed_password)
+    user = User(email=email, password=hashed_password, role_id=2)
     session.add(user)
     session.commit()
     session.refresh(user)
