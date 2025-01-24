@@ -1,10 +1,15 @@
-from fastapi import UploadFile, APIRouter, HTTPException
+from typing import Annotated
+
+from fastapi import UploadFile, APIRouter, HTTPException, Depends
 from sqlmodel import Session
 from starlette.responses import JSONResponse
 
+from app.database import get_session
+from app.models import User
 from app.services.azure_blob_service import azure_blob_service
 from app.services.prediction_service import prediction_service
-from app.services.specie_service import get_specie_by_class_number, get_species_responses, get_specie_response
+from app.services.specie_service import get_specie_by_class_number, get_species_prediction_responses, get_specie_prediction_response, \
+    save_identification
 
 router = APIRouter(
     prefix="/species"
@@ -14,11 +19,12 @@ def assert_content_type_is_valid(content_type: str):
     if content_type not in ["image/jpeg", "image/png"]:
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload a JPEG or PNG image.")
 
+# TODO implement a middleware to inject the authenticated user in the method parameters
 @router.post(
     "/predict",
     description="predicts the class of an image",
 )
-async def predict_image_class(image: UploadFile, session : Session) -> JSONResponse:
+async def predict_image_class(image: UploadFile, authenticated_user : Annotated[User, Depends(get_authenticated_user)], session: Session = Depends(get_session)) -> JSONResponse:
 
     assert_content_type_is_valid(image.content_type)
 
@@ -29,13 +35,16 @@ async def predict_image_class(image: UploadFile, session : Session) -> JSONRespo
         species_predictions = prediction_service.classify_image(image)
 
         # 3. save the image in the blob storage if it is a footprint
-        azure_blob_service.upload_file(image)
+        blob_key = azure_blob_service.upload_file(image)
 
-        # 4. get the associated species data for each predicted class
+        # 4. save the Identification in the database for the maximum probability class
+        save_identification(session, authenticated_user, species_predictions[0].class_number, blob_key)
+
+        # 5. get the associated species data for each predicted class
         species = [get_specie_by_class_number(prediction.class_number, session) for prediction in species_predictions]
 
-        # 5. prepare the response
-        species_response = get_species_responses(species, species_predictions)
+        # 6. prepare the response
+        species_response = get_species_prediction_responses(species, species_predictions)
 
         return JSONResponse(
             {"species": species_response},
@@ -51,10 +60,10 @@ async def predict_image_class(image: UploadFile, session : Session) -> JSONRespo
     "/{class_number}",
     description="get the species data associated with a class number",
 )
-async def get_specie_by_class_number(class_number: int, session: Session) -> JSONResponse:
+async def get_specie(class_number: int, session: Session = Depends(get_session)) -> JSONResponse:
     specie = get_specie_by_class_number(class_number, session)
 
-    specie_response = get_specie_response(specie)
+    specie_response = get_specie_prediction_response(specie)
 
     return JSONResponse(
         {"specie": specie_response},

@@ -1,9 +1,11 @@
 import os
 import uuid
+from datetime import datetime
 
 from azure.storage.blob.aio import BlobServiceClient, ContainerClient
 from fastapi import UploadFile, HTTPException
 
+BASE_PATH_IMAGES = "images/"
 
 class AzureBlobService:
     def __init__(self, account_name: str, account_key: str, container_name: str):
@@ -37,7 +39,8 @@ class AzureBlobService:
         try:
             await self.ensure_container_exists()
 
-            blob_name = f"{uuid.uuid4()}-{file.filename}"
+            current_date = datetime.now().strftime("%Y%m%d_%H%M%S")
+            blob_name = f"{BASE_PATH_IMAGES}{current_date}-{uuid.uuid4()}-{file.filename}"
 
             async with file.file as file_stream:
                 await self.container_client.upload_blob(name=blob_name, data=file_stream, overwrite=True)
@@ -47,7 +50,7 @@ class AzureBlobService:
             raise HTTPException(status_code=500, detail=f"File upload failed: {ex}")
 
     # Download a file from the Azure Blob Storage
-    async def download_file(self, blob_name: str):
+    async def download_file(self, blob_name: str) -> bytes:
         try:
             await self.ensure_container_exists()
 

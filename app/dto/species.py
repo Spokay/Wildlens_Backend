@@ -7,9 +7,5 @@ class SpeciePrediction(BaseModel):
     probability: float
 
 
-class SpeciePredictionResponse(BaseModel):
-    specie: Specie
+class SpeciePredictionResponse(Specie):
     probability: float
-
-class SpecieInformationResponse(BaseModel):
-    specie: Specie

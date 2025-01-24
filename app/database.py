@@ -24,6 +24,6 @@ def create_db_and_tables(engine):
         Identification.__table__,
     ])
 
-def get_session(engine):
-    with Session(engine) as session:
+def get_session():
+    with Session(database_engine) as session:
         yield session
