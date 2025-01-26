@@ -1,10 +1,19 @@
 from typing import Optional
 
+from passlib.context import CryptContext
 from sqlmodel import Session, select
 
 from app.config import email_validation_regex
 from app.models import User
-from app.services.authentication_service import get_password_hash
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
 
 def is_email_valid(email: str) -> bool:
     return email_validation_regex.fullmatch(email)

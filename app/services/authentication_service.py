@@ -4,7 +4,6 @@ from typing import Optional
 from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jwt import InvalidTokenError
-from passlib.context import CryptContext
 from sqlmodel import Session
 from starlette import status
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -13,20 +12,12 @@ from starlette.requests import Request
 from app.dto.users import AuthenticatedUser
 from app.models import User
 from app.services.token_service import decode_access_token
-from app.services.user_service import get_user_by_email
+from app.services.user_service import get_user_by_email, verify_password
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 EXCLUDED_PATHS = ["/docs", "/api/openapi.json", "/users/token", "/users/register"]
 
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password):
-    return pwd_context.hash(password)
 
 def authenticate_user(session : Session, email: str, password: str):
     user : Optional[User] = get_user_by_email(session, email)
