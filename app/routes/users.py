@@ -10,10 +10,10 @@ from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.database import get_session
 from app.dto.badge import BadgeResponse
 from app.dto.users import AuthenticatedUser
-from app.services.authentication_service import authenticate_user, get_current_user, user_exists, create_user
+from app.services.authentication_service import authenticate_user, get_current_user
 from app.services.badge_service import get_user_badges
 from app.services.token_service import Token, create_access_token
-from app.services.user_service import is_email_valid, is_password_valid
+from app.services.user_service import is_email_valid, is_password_valid, create_user, user_exists
 
 router = APIRouter(
     prefix="/users",
