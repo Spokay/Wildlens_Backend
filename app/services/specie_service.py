@@ -1,6 +1,8 @@
 from typing import Optional
 
+from fastapi import HTTPException
 from sqlmodel import Session, select
+from starlette import status
 
 from app.dto.species import SpecieResponse
 from app.dto.users import AuthenticatedUser
@@ -11,7 +13,10 @@ from app.models import Specie, Identification
 def get_specie_by_class_number(class_number: int, session: Session) -> Specie:
     specie: Optional[Specie] = session.get(Specie, class_number)
     if specie is None:
-        raise ValueError(f"Specie with id {class_number} not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Specie with id {class_number} not found"
+        )
 
     return specie
 
@@ -31,8 +36,6 @@ def save_identification(
     session.add(identification)
     session.commit()
     session.refresh(identification)
-
-    # TODO: Check if a badge should be awarded to the user here
 
     return identification
 

@@ -5,12 +5,12 @@ meta {
 }
 
 post {
-  url: {{BASE_URL}}/users/register
+  url: {{BASE_URL}}{{API_PREFIX}}/users/register
   body: formUrlEncoded
   auth: none
 }
 
 body:form-urlencoded {
-  username: test@test.fr
+  username: test10@test.fr
   password: test123
 }

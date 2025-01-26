@@ -4,20 +4,19 @@ from typing import Optional
 from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jwt import InvalidTokenError
+from passlib.context import CryptContext
 from sqlmodel import Session
 from starlette import status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
+from app.config import EXCLUDED_PATHS
 from app.dto.users import AuthenticatedUser
 from app.models import User
 from app.services.token_service import decode_access_token
 from app.services.user_service import get_user_by_email, verify_password
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
-
-EXCLUDED_PATHS = ["/docs", "/api/openapi.json", "/users/token", "/users/register"]
-
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/token")
 
 def authenticate_user(session : Session, email: str, password: str):
     user : Optional[User] = get_user_by_email(session, email)
@@ -38,7 +37,7 @@ async def get_current_user(request: Request) -> AuthenticatedUser:
     return AuthenticatedUser(user_id=user_id, email=email, role_name=role_name)
 
 
-async def extract_token_from_request(request: Request) -> Optional[str]:
+async def extract_token_from_request(request: Request) -> str:
     token = None
     auth_header = request.headers.get("Authorization")
     if auth_header:
@@ -48,7 +47,9 @@ async def extract_token_from_request(request: Request) -> Optional[str]:
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
 
-        if request.url.path in EXCLUDED_PATHS:
+        normalized_path = request.url.path.rstrip('/')
+
+        if normalized_path in EXCLUDED_PATHS:
             return await call_next(request)
 
         token = await extract_token_from_request(request)
@@ -81,7 +82,10 @@ def role_required(role: str):
         async def wrapper(request: Request, *args, **kwargs):
             user_role = request.state.role_name
             if user_role != role:
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have the required permissions")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You do not have the required permissions"
+                )
             return await func(request, *args, **kwargs)
         return wrapper
     return decorator

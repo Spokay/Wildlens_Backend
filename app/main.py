@@ -2,6 +2,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+from app.config import API_PREFIX
+
 from contextlib import asynccontextmanager
 from typing import Annotated
 
@@ -21,7 +23,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 @asynccontextmanager
 async def lifespan(app_object: FastAPI):
     # Executed before startup (setup):
-    create_db_and_tables(database_engine)
+    # create_db_and_tables(database_engine)
     # ------------------------------
     yield  # <--- This is where the context manager pauses and the application starts
     # ------------------------------
@@ -31,7 +33,7 @@ async def lifespan(app_object: FastAPI):
 
 
 app = FastAPI(
-    root_path="/api",
+    root_path=API_PREFIX,
     lifespan=lifespan
 )
 

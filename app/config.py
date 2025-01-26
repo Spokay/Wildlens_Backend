@@ -18,3 +18,12 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRATION_MINUTES", 30))
 email_validation_regex = re.compile(r"([-!#-'*+/-9=?A-Z^-~]+(\.[-!#-'*+/-9=?A-Z^-~]+)*|\"([]!#-[^-~ \t]|(\\[\t -~]))+\")@([-!#-'*+/-9=?A-Z^-~]+(\.[-!#-'*+/-9=?A-Z^-~]+)*|\[[\t -Z^-~]*])")
 
 
+# API
+API_PREFIX = os.getenv("API_PREFIX", "/api")
+
+EXCLUDED_PATHS = [
+    "/docs", # Swagger UI
+    f"{API_PREFIX}/openapi.json", # OpenAPI schema
+    f"{API_PREFIX}/users/token", # Login
+    f"{API_PREFIX}/users/register" # Register
+]

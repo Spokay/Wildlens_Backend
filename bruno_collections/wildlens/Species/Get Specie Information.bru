@@ -1,0 +1,15 @@
+meta {
+  name: Get Specie Information
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{BASE_URL}}{{API_PREFIX}}/species/:class_number
+  body: none
+  auth: inherit
+}
+
+params:path {
+  class_number: 1
+}
