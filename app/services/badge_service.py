@@ -1,5 +1,6 @@
 from typing import Dict, Any
 
+from sqlalchemy.sql.functions import count
 from sqlmodel import Session, select
 
 from app.dto.badge import BadgeResponse
@@ -76,12 +77,12 @@ def evaluate_identification_count_by_specie(user_id: int, criteria: Dict[str, An
 
     required_specie = criteria.get("specie")
 
-    statement = select(Identification).where(Identification.user_id == user_id)
+    statement = select(count()).where(Identification.user_id == user_id)
 
     if required_specie:
         statement = statement.where(Identification.specie_id == required_specie)
 
-    identification_count = session.exec(statement).count()
+    identification_count = session.exec(statement).one()
 
     return identification_count >= required
 
