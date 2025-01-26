@@ -14,7 +14,7 @@ def get_user_badges(user_id: int, session : Session) -> list[BadgeResponse]:
     badges_already_received = get_badges_already_received(user_id, session)
 
     # Extract the badge IDs of the badges already received
-    awarded_badge_ids = {badge.id for badge, _ in badges_already_received}
+    awarded_badge_ids = {badge_response.id for badge_response in badges_already_received}
 
     # fill the badges list with the badges already received
     badges_response.extend(badges_already_received)
@@ -44,7 +44,7 @@ def get_user_badges(user_id: int, session : Session) -> list[BadgeResponse]:
 
 def get_badges_already_received(user_id: int, session: Session) -> list[BadgeResponse]:
     badges_statement = (select(Badge, UserBadge.date_awarded)
-                        .join_from(Badge.id == UserBadge.badge_id)
+                        .join_from(Badge, UserBadge, Badge.id == UserBadge.badge_id)
                         .where(UserBadge.user_id == user_id))
 
     badges = session.exec(badges_statement).all()

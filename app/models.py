@@ -1,6 +1,7 @@
 import datetime as dt
-from typing import Dict, Any
+from typing import Dict
 
+from pydantic import ConfigDict
 from sqlalchemy import String, Column, JSON
 from sqlmodel import SQLModel, Field, Relationship
 
@@ -82,5 +83,6 @@ class BadgeCriteria(SQLModel, table=True):
     criteria: Dict = Field(default_factory=dict, sa_column=Column(JSON))
 
     # Needed for Column(JSON)
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(
+        frozen=False,
+    )
