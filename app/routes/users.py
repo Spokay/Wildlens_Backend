@@ -16,6 +16,7 @@ from app.services.token_service import Token, create_access_token
 
 router = APIRouter(
     prefix="/users",
+    tags=["users"]
 )
 
 @router.post(
@@ -78,7 +79,7 @@ async def register_user(
 
 @router.get(
     "/me/badges",
-    description="get the badges of the current user",
+    description="Get the badges of the current user",
     response_model=list[BadgeResponse],
     status_code=status.HTTP_200_OK
 )

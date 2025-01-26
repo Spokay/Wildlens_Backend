@@ -15,7 +15,8 @@ from app.services.prediction_service import prediction_service
 from app.services.specie_service import get_specie_by_class_number, save_identification, get_identified_species_by_user
 
 router = APIRouter(
-    prefix="/species"
+    prefix="/species",
+    tags=["species"]
 )
 
 def assert_content_type_is_valid(content_type: str):
@@ -66,7 +67,7 @@ async def predict_image_class(
     response_model=SpecieResponse,
     status_code=status.HTTP_200_OK
 )
-async def get_specie(
+async def get_specie_information(
         class_number: int,
         session: Session = Depends(get_session)
 ) -> JSONResponse:
