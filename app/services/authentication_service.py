@@ -18,7 +18,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-EXCLUDED_PATHS = ["/users/token", "/users/register"]
+EXCLUDED_PATHS = ["/docs", "/api/openapi.json", "/users/token", "/users/register"]
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -59,12 +59,21 @@ async def get_current_user(request: Request) -> AuthenticatedUser:
     return AuthenticatedUser(user_id=user_id, email=email, role_name=role_name)
 
 
+async def extract_token_from_request(request: Request) -> Optional[str]:
+    token = None
+    auth_header = request.headers.get("Authorization")
+    if auth_header:
+        token = auth_header.replace("Bearer ", "")
+    return token
+
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+
         if request.url.path in EXCLUDED_PATHS:
             return await call_next(request)
 
-        token = request.headers.get("Authorization").replace("Bearer ", "")
+        token = await extract_token_from_request(request)
+
         if not token:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
