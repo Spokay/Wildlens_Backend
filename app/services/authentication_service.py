@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jwt import InvalidTokenError
 from passlib.context import CryptContext
-from sqlmodel import Session, select
+from sqlmodel import Session
 from starlette import status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -13,6 +13,7 @@ from starlette.requests import Request
 from app.dto.users import AuthenticatedUser
 from app.models import User
 from app.services.token_service import decode_access_token
+from app.services.user_service import get_user_by_email
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/token")
 
@@ -28,25 +29,12 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 def authenticate_user(session : Session, email: str, password: str):
-    user : Optional[User] = session.exec(select(User).where(User.email == email)).first()
+    user : Optional[User] = get_user_by_email(session, email)
     if not user:
         return False
     if not verify_password(password, user.password):
         return False
     return user
-
-def user_exists(session: Session, email: str) -> bool:
-    user : Optional[User] = session.exec(select(User).where(User.email == email)).first()
-    return user is not None
-
-def create_user(session: Session, email: str, password: str) -> User:
-    hashed_password = get_password_hash(password)
-    user = User(email=email, password=hashed_password, role_id=2)
-    session.add(user)
-    session.commit()
-    session.refresh(user)
-    return user
-
 
 async def get_current_user(request: Request) -> AuthenticatedUser:
     user_id = request.state.user_id

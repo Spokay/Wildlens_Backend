@@ -13,6 +13,7 @@ from app.dto.users import AuthenticatedUser
 from app.services.authentication_service import authenticate_user, get_current_user, user_exists, create_user
 from app.services.badge_service import get_user_badges
 from app.services.token_service import Token, create_access_token
+from app.services.user_service import is_email_valid, is_password_valid
 
 router = APIRouter(
     prefix="/users",
@@ -58,6 +59,11 @@ async def register_user(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     session: Session = Depends(get_session)
 ) -> Token:
+    if not is_email_valid(form_data.username) or not is_password_valid(form_data.password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username and password are not valid",
+        )
 
     if user_exists(session, form_data.username):
         raise HTTPException(
