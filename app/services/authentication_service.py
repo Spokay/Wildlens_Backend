@@ -4,7 +4,6 @@ from typing import Optional
 from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jwt import InvalidTokenError
-from passlib.context import CryptContext
 from sqlmodel import Session
 from starlette import status
 from starlette.middleware.base import BaseHTTPMiddleware

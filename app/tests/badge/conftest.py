@@ -45,7 +45,7 @@ def mock_badge_and_criteria():
         "type": "and",
         "conditions": [
             {"type": "identification_count_by_specie", "required": 1, "specie": 1},
-            {"type": "identification_count_by_specie", "required": 2, "specie": 2},
+            {"type": "identification_count_by_specie", "required": 1, "specie": 2},
         ],
     }
     return BadgeCriteria(badge_id=3, criteria=criteria)
@@ -56,7 +56,7 @@ def mock_badge_or_criteria():
         "type": "or",
         "conditions": [
             {"type": "identification_count_by_specie", "required": 1, "specie": 1},
-            {"type": "identification_count_by_specie", "required": 2, "specie": 2},
+            {"type": "identification_count_by_specie", "required": 1, "specie": 2},
         ],
     }
     return BadgeCriteria(badge_id=4, criteria=criteria)

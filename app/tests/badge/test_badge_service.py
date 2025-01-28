@@ -59,14 +59,15 @@ def test_award_badge(mock_session, mock_user_badge_to_award):
     mock_session.refresh.assert_called_once()
 
 
-def test_evaluate_identification_count_by_specie(mock_session, mock_identification):
+def test_evaluate_identification_count_by_specie(mock_session):
     # Arrange
     user_id = 1
     criteria = {"type": "identification_count_by_specie", "required": 1, "specie": 1}
-    mock_session.exec.return_value.count.return_value = 1
+    mock_session.exec.return_value.one.return_value = 1
 
     # Act
     result = evaluate_identification_count_by_specie(user_id, criteria, mock_session)
+    print(result)
 
     # Assert
     assert result is True
@@ -77,7 +78,7 @@ def test_evaluate_criteria_and_type(mock_session, mock_badge_and_criteria):
     # Arrange
     user_id = 1
     criteria = mock_badge_and_criteria.criteria
-    mock_session.exec.return_value.count.side_effect = [1, 2]
+    mock_session.exec.return_value.one.side_effect = [1, 1]
 
     # Act
     result = evaluate_criteria(user_id, criteria, mock_session)
@@ -91,7 +92,7 @@ def test_evaluate_criteria_or_type(mock_session, mock_badge_or_criteria):
     # Arrange
     user_id = 1
     criteria = mock_badge_or_criteria.criteria
-    mock_session.exec.return_value.count.side_effect = [0, 2]
+    mock_session.exec.return_value.one.side_effect = [0, 1]
 
     # Act
     result = evaluate_criteria(user_id, criteria, mock_session)
