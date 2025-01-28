@@ -3,6 +3,7 @@ from typing import Dict, Any
 from sqlalchemy.sql.functions import count
 from sqlmodel import Session, select
 
+from app.config import NUMBER_OF_CLASSES
 from app.dto.badge import BadgeResponse
 from app.models import Badge, UserBadge, Identification, BadgeCriteria
 
@@ -86,12 +87,22 @@ def evaluate_identification_count_by_specie(user_id: int, criteria: Dict[str, An
 
     return identification_count >= required
 
+def evaluate_all_specied_identified(user_id: int, session: Session) -> bool:
+
+    statement = select(count()).distinct(Identification.specie_id).where(Identification.user_id == user_id)
+    amount_different_identified_species = session.exec(statement).one()
+
+    return NUMBER_OF_CLASSES == amount_different_identified_species
+
 def evaluate_criteria(user_id: int, criteria: Dict[str, Any], session: Session) -> bool:
     criteria_type = criteria.get("type")
 
     # criterias evaluation
     if criteria_type == "identification_count_by_specie":
         return evaluate_identification_count_by_specie(user_id, criteria, session)
+
+    if criteria_type == "all_species_identified":
+        return evaluate_all_specied_identified(user_id, session)
 
     # TODO: Implement the other criteria types here
 

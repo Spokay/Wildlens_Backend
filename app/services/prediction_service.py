@@ -6,7 +6,7 @@ import numpy as np
 from numpy import ndarray, dtype, generic
 
 from app.classifier_models import binary_classifier_model, multiclass_classifier_model
-from app.config import WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD
+from app.config import WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD, NUMBER_OF_CLASSES
 from app.dto.species import SpeciePrediction
 
 
@@ -64,5 +64,5 @@ class PredictionService:
 prediction_service = PredictionService(
     binary_classifier=binary_classifier_model,
     multiclass_classifier=multiclass_classifier_model,
-    nb_classes=10
+    nb_classes=NUMBER_OF_CLASSES
 )

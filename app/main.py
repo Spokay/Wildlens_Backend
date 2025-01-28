@@ -12,7 +12,7 @@ from fastapi import FastAPI, Depends
 from sqlmodel import Session
 
 from app.services.authentication_service import AuthMiddleware
-from app.database import create_db_and_tables, get_session, database_engine
+from app.database import create_db_and_tables, get_session
 from app.routes import users, species
 
 
