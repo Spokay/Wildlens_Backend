@@ -1,0 +1,16 @@
+meta {
+  name: Login
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{BASE_URL}}{{API_PREFIX}}/users/token
+  body: formUrlEncoded
+  auth: none
+}
+
+body:form-urlencoded {
+  username: test@test.fr
+  password: test123
+}

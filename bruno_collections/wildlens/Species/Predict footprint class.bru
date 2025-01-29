@@ -1,0 +1,15 @@
+meta {
+  name: Predict footprint class
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{BASE_URL}}{{API_PREFIX}}/species/predict
+  body: multipartForm
+  auth: inherit
+}
+
+body:multipart-form {
+  image: @file()
+}

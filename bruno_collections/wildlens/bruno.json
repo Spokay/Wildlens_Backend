@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "wildlens",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
