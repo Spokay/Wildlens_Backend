@@ -1,37 +1,30 @@
-from typing import Any
-
-from PIL import Image
+import aiohttp.client
 from fastapi import UploadFile, HTTPException
-import numpy as np
-from numpy import ndarray, dtype, generic
 
-from app.classifier_models import binary_classifier_model, multiclass_classifier_model
-from app.config import WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD, NUMBER_OF_CLASSES
+from app.config import WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD, NUMBER_OF_CLASSES, \
+    WILDLENS_PREDICTION_API_BASE_URL, WILDLENS_PREDICTION_API_KEY
 from app.dto.species import SpeciePrediction
 
+BINARY_PREDICTION_URL = f"{WILDLENS_PREDICTION_API_BASE_URL}/predictions/binary"
+MULTICLASS_PREDICTION_URL = f"{WILDLENS_PREDICTION_API_BASE_URL}/prediction/multiclass"
 
-def prepare_input_tensor(image_file: UploadFile) -> ndarray[Any, dtype[generic | Any]]:
-    image = Image.open(image_file.file).convert("RGB")
-
-    image_array = np.array(image)
-
-    return np.expand_dims(image_array, axis=0)
+async def get_client():
+    headers = {"Authorization": WILDLENS_PREDICTION_API_KEY}
+    async with aiohttp.ClientSession(headers=headers) as client:
+        yield client
 
 
-class PredictionService:
-    def __init__(self, binary_classifier, multiclass_classifier, nb_classes=10):
-        self.binary_classifier_model = binary_classifier
-        self.multiclass_classifier_model = multiclass_classifier
+class WildlensAPIService:
+    def __init__(self,client, nb_classes=10):
+        self.client = client
         self.nb_classes = nb_classes
         self.classes = list(range(nb_classes))
 
 
-    def check_image_for_footprint(self, image_file: UploadFile) -> bool:
+    async def check_image_for_footprint(self, image_file: UploadFile) -> bool:
         try:
-            input_tensor = prepare_input_tensor(image_file)
-
-            # Perform inference (preprocessing is handled in the model)
-            predictions = self.binary_classifier_model.predict(input_tensor)
+            # Perform inference with the Prediction API (preprocessing is handled in the model)
+            predictions = self.client.post(BINARY_PREDICTION_URL, files={"image_file": image_file}).json()
 
             probability = predictions[0]
 
@@ -41,13 +34,10 @@ class PredictionService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error while processing footprint check: {str(e)}")
 
-    def classify_image(self, image_file: UploadFile) -> list[SpeciePrediction]:
+    async def classify_image(self, image_file: UploadFile) -> list[SpeciePrediction]:
         try:
-            input_tensor = prepare_input_tensor(image_file)
-
             # Perform inference (preprocessing is handled in the model)
-            predictions = self.multiclass_classifier_model.predict(input_tensor)
-
+            predictions = self.client.post(MULTICLASS_PREDICTION_URL, files={"image_file": image_file})
 
             # Get the top 3 predicted classes with their probabilities
             probability_by_classes = zip(predictions, self.classes)
@@ -61,8 +51,9 @@ class PredictionService:
             raise HTTPException(status_code=500, detail=f"Error while processing footprint classification: {str(e)}")
 
 
-prediction_service = PredictionService(
-    binary_classifier=binary_classifier_model,
-    multiclass_classifier=multiclass_classifier_model,
-    nb_classes=NUMBER_OF_CLASSES
-)
+
+def prediction_service():
+    return WildlensAPIService(
+        client=get_client(),
+        nb_classes=NUMBER_OF_CLASSES
+    )

@@ -6,14 +6,12 @@ azure-storage-blob
 azure-identity
 python-multipart
 pillow~=11.1.0
-tensorflow~=2.18.0
 numpy~=2.0.2
 pydantic~=2.10.6
 pydantic-core~=2.27.2
 sqlalchemy~=2.0.37
 sqlmodel~=0.0.22
 azure-core~=1.32.0
-keras~=3.8.0
 pyodbc~=5.2.0
 aiohttp>=3.11.5
 pytest~=8.3.4
