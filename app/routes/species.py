@@ -11,7 +11,7 @@ from app.dto.users import AuthenticatedUser
 from app.mappers.specie_mapper import species_to_prediction_responses, specie_to_response
 from app.services.authentication_service import get_current_user
 from app.services.azure_blob_service import azure_blob_service
-from app.services.prediction_service import prediction_service
+from app.services.wildlens_api_service import prediction_service
 from app.services.specie_service import get_specie_by_class_number, save_identification, get_identified_species_by_user
 
 router = APIRouter(
