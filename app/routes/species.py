@@ -1,3 +1,4 @@
+import os
 from typing import Annotated
 
 from fastapi import UploadFile, APIRouter, HTTPException, Depends
@@ -10,7 +11,7 @@ from app.dto.species import SpecieResponse, SpeciePredictionResponse
 from app.dto.users import AuthenticatedUser
 from app.mappers.specie_mapper import species_to_prediction_responses, specie_to_response
 from app.services.authentication_service import get_current_user
-from app.services.azure_blob_service import azure_blob_service
+from app.services.azure_blob_service import AzureBlobService
 from app.services.wildlens_api_service import prediction_service
 from app.services.specie_service import get_specie_by_class_number, save_identification, get_identified_species_by_user
 
@@ -18,6 +19,15 @@ router = APIRouter(
     prefix="/species",
     tags=["species"]
 )
+
+
+def get_azure_blob_service():
+    return AzureBlobService(
+        account_name=os.getenv('AZURE_STORAGE_ACCOUNT_NAME'),
+        account_key=os.getenv('AZURE_STORAGE_ACCOUNT_KEY'),
+        container_name=os.getenv('AZURE_STORAGE_CONTAINER_NAME')
+    )
+
 
 def assert_content_type_is_valid(content_type: str):
     if content_type not in ["image/jpeg", "image/png"]:
@@ -32,7 +42,8 @@ def assert_content_type_is_valid(content_type: str):
 async def predict_image_class(
         image: UploadFile,
         authenticated_user : Annotated[AuthenticatedUser, Depends(get_current_user)],
-        session: Session = Depends(get_session)
+        session: Session = Depends(get_session),
+        azure_blob_service: AzureBlobService = Depends(get_azure_blob_service)
 ) -> list[SpeciePredictionResponse] | JSONResponse:
     assert_content_type_is_valid(image.content_type)
 
