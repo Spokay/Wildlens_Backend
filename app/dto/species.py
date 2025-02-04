@@ -9,6 +9,14 @@ class SpeciePrediction(BaseModel):
     class_number: int
     probability: float
 
+class SpecieBasicInfoResponse(BaseModel):
+    id: int
+    name: str
+    latin_name: str
+    region: str
+    family: "FamilyResponse"
+    habitats: list["HabitatResponse"]
+
 class SpecieResponse(SQLModel):
     id: int
     name: str
@@ -17,8 +25,8 @@ class SpecieResponse(SQLModel):
     size: str
     region: str
     fun_fact: str
-    specie_exemple_photo: bytes
-    footprint_exemple_photo: bytes
+    specie_exemple_photo_url: str
+    footprint_exemple_photo_url: str
     family: "FamilyResponse"
     habitats: list["HabitatResponse"]
 

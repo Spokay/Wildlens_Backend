@@ -1,8 +1,9 @@
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta, UTC
 from functools import lru_cache
 
+from azure.storage.blob import generate_blob_sas, BlobSasPermissions
 from azure.storage.blob.aio import BlobServiceClient, ContainerClient
 from fastapi import UploadFile, HTTPException
 
@@ -11,6 +12,8 @@ BASE_PATH_IMAGES = "images/"
 class AzureBlobService:
     def __init__(self, account_name: str, account_key: str, container_name: str):
 
+        self.account_name = account_name
+        self.account_key = account_key
         # Azure Blob storage client initialization
         try:
             self.container_name = container_name
@@ -62,6 +65,17 @@ class AzureBlobService:
             return data
         except Exception as ex:
             raise HTTPException(status_code=404, detail=f"Blob '{blob_name}' not found: {ex}")
+
+    async def generate_sas_token(self, blob_name: str, expiry_hours: int = 1) -> str:
+        sas_token = generate_blob_sas(
+            account_name=self.account_name,
+            container_name=self.container_name,
+            blob_name=blob_name,
+            account_key=self.account_key,
+            permission=BlobSasPermissions(read=True),
+            expiry=datetime.now(UTC) + timedelta(hours=expiry_hours)
+        )
+        return f"https://{self.account_name}.blob.core.windows.net/{self.container_name}/{blob_name}?{sas_token}"
 
 @lru_cache()
 def get_azure_blob_service():

@@ -2,7 +2,7 @@ from functools import lru_cache
 
 from fastapi import Depends
 
-from app.dto.species import SpeciePredictionResponse, SpeciePrediction, SpecieResponse
+from app.dto.species import SpeciePredictionResponse, SpeciePrediction, SpecieResponse, SpecieBasicInfoResponse
 from app.mappers.family_mapper import get_family_mapper
 from app.mappers.habitat_mapper import get_habitat_mapper
 from app.models import Specie
@@ -25,8 +25,8 @@ class SpecieMapper:
         family_response = await self.family_mapper.family_to_response(specie.family)
         habitats_response = [await self.habitat_mapper.habitat_to_response(habitat) for habitat in specie.habitats]
 
-        specie_exemple_photo : bytes = await self.azure_blob_service.download_file(specie.specie_exemple_photo)
-        footprint_example_photo : bytes = await self.azure_blob_service.download_file(specie.footprint_exemple_photo)
+        specie_exemple_photo : bytes = await self.azure_blob_service.generate_sas_token(specie.specie_exemple_photo)
+        footprint_example_photo : bytes = await self.azure_blob_service.generate_sas_token(specie.footprint_exemple_photo)
 
         return SpecieResponse(
             id=specie.id,
@@ -36,11 +36,27 @@ class SpecieMapper:
             size=specie.size,
             region=specie.region,
             fun_fact=specie.fun_fact,
-            specie_exemple_photo=specie_exemple_photo,
-            footprint_exemple_photo=footprint_example_photo,
+            specie_exemple_photo_url=specie_exemple_photo,
+            footprint_exemple_photo_url=footprint_example_photo,
             family=family_response,
             habitats=habitats_response
         )
+
+    async def specie_to_basic_info_response(self, specie: Specie) -> SpecieBasicInfoResponse:
+        family_response = await self.family_mapper.family_to_response(specie.family)
+        habitats_response = [await self.habitat_mapper.habitat_to_response(habitat) for habitat in specie.habitats]
+
+        return SpecieBasicInfoResponse(
+            id=specie.id,
+            name=specie.name,
+            latin_name=specie.latin_name,
+            region=specie.region,
+            family=family_response,
+            habitats=habitats_response
+        )
+
+    async def species_to_basic_info_responses(self, species: list[Specie]) -> list[SpecieBasicInfoResponse]:
+        return [await self.specie_to_basic_info_response(specie) for specie in species]
 
     async def species_to_responses(self, species: list[Specie]) -> list[SpecieResponse]:
         return [await self.specie_to_response(specie) for specie in species]
@@ -49,8 +65,6 @@ class SpecieMapper:
         family_response = await self.family_mapper.family_to_response(specie.family)
         habitats_response = [await self.habitat_mapper.habitat_to_response(habitat) for habitat in specie.habitats]
 
-        specie_exemple_photo: bytes = await self.azure_blob_service.download_file(specie.specie_exemple_photo)
-        footprint_example_photo: bytes = await self.azure_blob_service.download_file(specie.footprint_exemple_photo)
 
         return SpeciePredictionResponse(
             id=specie.id,
@@ -60,8 +74,6 @@ class SpecieMapper:
             size=specie.size,
             region=specie.region,
             fun_fact=specie.fun_fact,
-            specie_exemple_photo=specie_exemple_photo,
-            footprint_exemple_photo=footprint_example_photo,
             family=family_response,
             habitats=habitats_response,
             probability=probability

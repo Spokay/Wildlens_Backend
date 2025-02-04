@@ -7,7 +7,7 @@ from starlette import status
 from starlette.responses import JSONResponse
 
 from app.database import get_session
-from app.dto.species import SpecieResponse, SpeciePredictionResponse
+from app.dto.species import SpecieResponse, SpeciePredictionResponse, SpecieBasicInfoResponse
 from app.dto.users import AuthenticatedUser
 from app.mappers.specie_mapper import get_specie_mapper
 from app.services.authentication_service import get_current_user
@@ -82,7 +82,7 @@ async def get_specie_information(
     specie_response = await specie_mapper.specie_to_response(specie)
 
     return JSONResponse(
-        {"specie": specie_response},
+        {"specie": specie_response.dict()},
         200
     )
 
@@ -90,14 +90,14 @@ async def get_specie_information(
 @router.get(
     "/identified/{user_id}",
     description="Get the species identified by a user",
-    response_model=list[SpecieResponse],
+    response_model=list[SpecieBasicInfoResponse],
     status_code=status.HTTP_200_OK
 )
 async def get_identified_species(
         user_id: int,
         session: Session = Depends(get_session),
         specie_mapper = Depends(get_specie_mapper)
-) -> list[SpecieResponse]:
+) -> list[SpecieBasicInfoResponse]:
     species_identified = await get_identified_species_by_user(user_id, session, specie_mapper)
 
     return species_identified

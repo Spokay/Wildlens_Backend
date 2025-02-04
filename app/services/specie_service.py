@@ -4,10 +4,10 @@ from fastapi import HTTPException
 from sqlmodel import Session, select
 from starlette import status
 
-from app.dto.species import SpecieResponse
+from app.dto.species import SpecieResponse, SpecieBasicInfoResponse
 from app.dto.users import AuthenticatedUser
 from app.mappers.specie_mapper import SpecieMapper
-from app.models import Specie, Identification
+from app.models import Specie, Identification, Family
 
 
 async def get_specie_by_class_number(class_number: int, session: Session) -> Specie:
@@ -40,11 +40,11 @@ async def save_identification(
     return identification
 
 
-async def get_identified_species_by_user(user_id: int, session: Session, specie_mapper : SpecieMapper) -> list[SpecieResponse]:
+async def get_identified_species_by_user(user_id: int, session: Session, specie_mapper : SpecieMapper) -> list[SpecieBasicInfoResponse]:
     statement = select(Specie).join(Identification).where(Identification.user_id == user_id)
 
     identified_species = session.exec(statement).all()
 
-    species_response = await specie_mapper.species_to_responses(identified_species)
+    species_response = await specie_mapper.species_to_basic_info_responses(identified_species)
 
     return species_response
