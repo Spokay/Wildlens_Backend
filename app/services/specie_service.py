@@ -6,11 +6,11 @@ from starlette import status
 
 from app.dto.species import SpecieResponse
 from app.dto.users import AuthenticatedUser
-from app.mappers.specie_mapper import species_to_responses
+from app.mappers.specie_mapper import SpecieMapper
 from app.models import Specie, Identification
 
 
-def get_specie_by_class_number(class_number: int, session: Session) -> Specie:
+async def get_specie_by_class_number(class_number: int, session: Session) -> Specie:
     specie: Optional[Specie] = session.get(Specie, class_number)
     if specie is None:
         raise HTTPException(
@@ -21,7 +21,7 @@ def get_specie_by_class_number(class_number: int, session: Session) -> Specie:
     return specie
 
 
-def save_identification(
+async def save_identification(
         session: Session,
         authenticated_user: AuthenticatedUser,
         class_number: int,
@@ -40,11 +40,11 @@ def save_identification(
     return identification
 
 
-def get_identified_species_by_user(user_id: int, session: Session) -> list[SpecieResponse]:
+async def get_identified_species_by_user(user_id: int, session: Session, specie_mapper : SpecieMapper) -> list[SpecieResponse]:
     statement = select(Specie).join(Identification).where(Identification.user_id == user_id)
 
     identified_species = session.exec(statement).all()
 
-    species_response = species_to_responses(identified_species)
+    species_response = await specie_mapper.species_to_responses(identified_species)
 
     return species_response

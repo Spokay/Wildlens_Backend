@@ -12,7 +12,7 @@ from fastapi import FastAPI, Depends
 from sqlmodel import Session
 
 from app.services.authentication_service import AuthMiddleware
-from app.database import create_db_and_tables, get_session
+from app.database import create_db_and_tables, get_session, database_engine
 from app.routes import users, species
 
 
@@ -43,4 +43,4 @@ app.include_router(users.router)
 app.include_router(species.router)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)

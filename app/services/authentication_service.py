@@ -17,8 +17,8 @@ from app.services.user_service import get_user_by_email, verify_password
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/token")
 
-def authenticate_user(session : Session, email: str, password: str):
-    user : Optional[User] = get_user_by_email(session, email)
+async def authenticate_user(session : Session, email: str, password: str):
+    user : Optional[User] = await get_user_by_email(session, email)
     if not user:
         return False
     if not verify_password(password, user.password):
@@ -60,7 +60,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             )
 
         try:
-            payload : dict = decode_access_token(token)
+            payload : dict = await decode_access_token(token)
             email = payload.get("sub")
             user_id = payload.get("user_id")
             role_name = payload.get("role")

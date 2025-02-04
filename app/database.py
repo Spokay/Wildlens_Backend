@@ -25,7 +25,7 @@ def create_db_and_tables(engine):
         SpecieHabitat.__table__,
         Identification.__table__,
         BadgeCriteria.__table__
-    ])
+    ], checkfirst=True)
 
     # session = Session(engine)
     #

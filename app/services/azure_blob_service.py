@@ -1,6 +1,7 @@
 import os
 import uuid
 from datetime import datetime
+from functools import lru_cache
 
 from azure.storage.blob.aio import BlobServiceClient, ContainerClient
 from fastapi import UploadFile, HTTPException
@@ -61,3 +62,11 @@ class AzureBlobService:
             return data
         except Exception as ex:
             raise HTTPException(status_code=404, detail=f"Blob '{blob_name}' not found: {ex}")
+
+@lru_cache()
+def get_azure_blob_service():
+    return AzureBlobService(
+        account_name=os.getenv('AZURE_STORAGE_ACCOUNT_NAME'),
+        account_key=os.getenv('AZURE_STORAGE_ACCOUNT_KEY'),
+        container_name=os.getenv('AZURE_STORAGE_CONTAINER_NAME')
+    )

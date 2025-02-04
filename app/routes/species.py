@@ -9,24 +9,16 @@ from starlette.responses import JSONResponse
 from app.database import get_session
 from app.dto.species import SpecieResponse, SpeciePredictionResponse
 from app.dto.users import AuthenticatedUser
-from app.mappers.specie_mapper import species_to_prediction_responses, specie_to_response
+from app.mappers.specie_mapper import get_specie_mapper
 from app.services.authentication_service import get_current_user
-from app.services.azure_blob_service import AzureBlobService
-from app.services.wildlens_api_service import prediction_service
+from app.services.azure_blob_service import AzureBlobService, get_azure_blob_service
 from app.services.specie_service import get_specie_by_class_number, save_identification, get_identified_species_by_user
+from app.services.wildlens_api_service import WildlensAPIService, get_wildlens_api_service
 
 router = APIRouter(
     prefix="/species",
     tags=["species"]
 )
-
-
-def get_azure_blob_service():
-    return AzureBlobService(
-        account_name=os.getenv('AZURE_STORAGE_ACCOUNT_NAME'),
-        account_key=os.getenv('AZURE_STORAGE_ACCOUNT_KEY'),
-        container_name=os.getenv('AZURE_STORAGE_CONTAINER_NAME')
-    )
 
 
 def assert_content_type_is_valid(content_type: str):
@@ -43,27 +35,29 @@ async def predict_image_class(
         image: UploadFile,
         authenticated_user : Annotated[AuthenticatedUser, Depends(get_current_user)],
         session: Session = Depends(get_session),
-        azure_blob_service: AzureBlobService = Depends(get_azure_blob_service)
+        azure_blob_service: AzureBlobService = Depends(get_azure_blob_service),
+        wildlens_prediction_api_service: WildlensAPIService = Depends(get_wildlens_api_service),
+        specie_mapper = Depends(get_specie_mapper)
 ) -> list[SpeciePredictionResponse] | JSONResponse:
     assert_content_type_is_valid(image.content_type)
 
     # 1. check if the image is a footprint
-    if prediction_service.check_image_for_footprint(image):
+    if await wildlens_prediction_api_service.check_image_for_footprint(image):
 
         # 2. if it is a footprint, predict the class of the image
-        species_predictions = prediction_service.classify_image(image)
+        species_predictions = await wildlens_prediction_api_service.classify_image(image)
 
         # 3. save the image in the blob storage if it is a footprint
-        blob_key = azure_blob_service.upload_file(image)
+        blob_key = await azure_blob_service.upload_file(image)
 
         # 4. save the Identification in the database for the maximum probability class
-        save_identification(session, authenticated_user, species_predictions[0].class_number, blob_key)
+        await save_identification(session, authenticated_user, species_predictions[0].class_number, blob_key)
 
         # 5. get the associated species data for each predicted class
-        species = [get_specie_by_class_number(prediction.class_number, session) for prediction in species_predictions]
+        species = [await get_specie_by_class_number(prediction.class_number, session) for prediction in species_predictions]
 
         # 6. prepare the response
-        species_response = species_to_prediction_responses(species, species_predictions)
+        species_response = await specie_mapper.species_to_prediction_responses(species, species_predictions)
 
         return species_response
     else:
@@ -80,11 +74,12 @@ async def predict_image_class(
 )
 async def get_specie_information(
         class_number: int,
-        session: Session = Depends(get_session)
+        session: Session = Depends(get_session),
+        specie_mapper = Depends(get_specie_mapper)
 ) -> JSONResponse:
-    specie = get_specie_by_class_number(class_number, session)
+    specie = await get_specie_by_class_number(class_number, session)
 
-    specie_response = specie_to_response(specie)
+    specie_response = await specie_mapper.specie_to_response(specie)
 
     return JSONResponse(
         {"specie": specie_response},
@@ -100,8 +95,9 @@ async def get_specie_information(
 )
 async def get_identified_species(
         user_id: int,
-        session: Session = Depends(get_session)
+        session: Session = Depends(get_session),
+        specie_mapper = Depends(get_specie_mapper)
 ) -> list[SpecieResponse]:
-    species_identified = get_identified_species_by_user(user_id, session)
+    species_identified = await get_identified_species_by_user(user_id, session, specie_mapper)
 
     return species_identified

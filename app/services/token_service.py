@@ -16,7 +16,7 @@ class TokenData(BaseModel):
     role_name: str | None = None
 
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+async def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -27,5 +27,5 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     return encoded_jwt
 
 
-def decode_access_token(token: str) -> dict:
+async def decode_access_token(token: str) -> dict:
     return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
