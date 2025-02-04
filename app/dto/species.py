@@ -17,6 +17,8 @@ class SpecieResponse(SQLModel):
     size: str
     region: str
     fun_fact: str
+    specie_exemple_photo: bytes
+    footprint_exemple_photo: bytes
     family: "FamilyResponse"
     habitats: list["HabitatResponse"]
 

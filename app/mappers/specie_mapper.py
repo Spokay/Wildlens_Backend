@@ -25,6 +25,9 @@ class SpecieMapper:
         family_response = await self.family_mapper.family_to_response(specie.family)
         habitats_response = [await self.habitat_mapper.habitat_to_response(habitat) for habitat in specie.habitats]
 
+        specie_exemple_photo : bytes = await self.azure_blob_service.download_file(specie.specie_exemple_photo)
+        footprint_example_photo : bytes = await self.azure_blob_service.download_file(specie.footprint_exemple_photo)
+
         return SpecieResponse(
             id=specie.id,
             name=specie.name,
@@ -33,6 +36,8 @@ class SpecieMapper:
             size=specie.size,
             region=specie.region,
             fun_fact=specie.fun_fact,
+            specie_exemple_photo=specie_exemple_photo,
+            footprint_exemple_photo=footprint_example_photo,
             family=family_response,
             habitats=habitats_response
         )
@@ -44,6 +49,9 @@ class SpecieMapper:
         family_response = await self.family_mapper.family_to_response(specie.family)
         habitats_response = [await self.habitat_mapper.habitat_to_response(habitat) for habitat in specie.habitats]
 
+        specie_exemple_photo: bytes = await self.azure_blob_service.download_file(specie.specie_exemple_photo)
+        footprint_example_photo: bytes = await self.azure_blob_service.download_file(specie.footprint_exemple_photo)
+
         return SpeciePredictionResponse(
             id=specie.id,
             name=specie.name,
@@ -52,6 +60,8 @@ class SpecieMapper:
             size=specie.size,
             region=specie.region,
             fun_fact=specie.fun_fact,
+            specie_exemple_photo=specie_exemple_photo,
+            footprint_exemple_photo=footprint_example_photo,
             family=family_response,
             habitats=habitats_response,
             probability=probability
