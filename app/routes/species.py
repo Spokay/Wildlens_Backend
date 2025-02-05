@@ -81,10 +81,7 @@ async def get_specie_information(
 
     specie_response = await specie_mapper.specie_to_response(specie)
 
-    return JSONResponse(
-        {"specie": specie_response.dict()},
-        200
-    )
+    return specie_response
 
 
 @router.get(
