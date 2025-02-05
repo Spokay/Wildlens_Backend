@@ -22,13 +22,15 @@ def expired_token():
     return ""
 
 @pytest.fixture
-def tests_jwt_secret_key() -> str:
+def jwt_secret_key() -> str:
     return "hIxw40sQsDfq0Dip+yxlYec2sp3q0REOIs8JNXPvW0Wiy0cM3kq/6tDFfpLwgcDLdD3AqT+il43kGV6vcN3nqQ=="
 
-def tests_jwt_expiration_minutes() -> int:
+@pytest.fixture
+def jwt_expiration_minutes() -> int:
     return 60
 
-def tests_jwt_algorithm():
+@pytest.fixture
+def jwt_algorithm():
     return "HS256"
 
 @pytest.fixture
