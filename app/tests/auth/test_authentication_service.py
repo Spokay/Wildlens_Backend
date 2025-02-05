@@ -1,6 +1,5 @@
 import pytest
 from fastapi import HTTPException
-from starlette.requests import Request
 
 from app.services.authentication_service import extract_token_from_request
 
@@ -13,13 +12,13 @@ async def test_extract_token_from_request_returns_none_if_no_authorization_heade
     assert result is None
 
 @pytest.mark.asyncio
-async def test_any_request_should_return_401_if_no_token_is_provided(test_client, request_with_no_token):
+async def test_any_request_should_return_401_if_no_token_is_provided(client, request_info_with_no_token):
 
     with pytest.raises(HTTPException):
-        response = await test_client.request(
-            method=request_with_no_token["method"],
-            url=request_with_no_token["url"],
-            headers=request_with_no_token["headers"],
+        response = await client.request(
+            method=request_info_with_no_token["method"],
+            url=request_info_with_no_token["url"],
+            headers=request_info_with_no_token["headers"],
         )
         assert response.status_code == 401
         assert response.json() == {"detail": "Not authenticated"}

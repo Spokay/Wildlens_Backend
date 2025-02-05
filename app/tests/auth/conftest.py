@@ -4,7 +4,7 @@ from app.dto.users import AuthenticatedUser
 
 
 @pytest.fixture
-def test_client():
+def client():
     from fastapi.testclient import TestClient
     from app.main import app
 
@@ -20,6 +20,16 @@ def invalid_token():
 @pytest.fixture
 def expired_token():
     return ""
+
+@pytest.fixture
+def tests_jwt_secret_key() -> str:
+    return "hIxw40sQsDfq0Dip+yxlYec2sp3q0REOIs8JNXPvW0Wiy0cM3kq/6tDFfpLwgcDLdD3AqT+il43kGV6vcN3nqQ=="
+
+def tests_jwt_expiration_minutes() -> int:
+    return 60
+
+def tests_jwt_algorithm():
+    return "HS256"
 
 @pytest.fixture
 def valid_token():
@@ -42,7 +52,16 @@ def authenticated_admin():
     )
 
 @pytest.fixture
-def request_with_no_token():
+def request_object_with_no_token(client, request_info_with_no_token):
+    return client.build_request(
+        method=request_info_with_no_token["method"],
+        url=request_info_with_no_token["url"],
+        headers=request_info_with_no_token["headers"]
+    )
+
+
+@pytest.fixture
+def request_info_with_no_token():
     return {
         "method": "GET",
         "url": "/species/1",
