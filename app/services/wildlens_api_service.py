@@ -6,24 +6,27 @@ from app.config import WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD, NUMBE
 from app.dto.species import SpeciePrediction
 
 BINARY_PREDICTION_URL = f"{WILDLENS_PREDICTION_API_BASE_URL}/predictions/binary"
-MULTICLASS_PREDICTION_URL = f"{WILDLENS_PREDICTION_API_BASE_URL}/prediction/multiclass"
+MULTICLASS_PREDICTION_URL = f"{WILDLENS_PREDICTION_API_BASE_URL}/predictions/multiclass"
 
 
 def get_client():
-    headers = Headers({"Authorization": WILDLENS_PREDICTION_API_KEY})
-    return Client(headers=headers)
+    headers = Headers({"Authorization": f"Key {WILDLENS_PREDICTION_API_KEY}"})
+    return Client(
+        headers=headers,
+        base_url=WILDLENS_PREDICTION_API_BASE_URL,
+    )
 
 
 class WildlensAPIService:
     def __init__(self, client, nb_classes=10):
         self.client = client
         self.nb_classes = nb_classes
-        self.classes = list(range(nb_classes))
+        self.classes = [i for i in range(1, nb_classes + 1)]
 
     async def check_image_for_footprint(self, image_file: UploadFile) -> bool:
         try:
             # Perform inference with the Prediction API (preprocessing is handled in the model)
-            predictions = self.client.post(BINARY_PREDICTION_URL, files={"image_file": image_file}).json()
+            predictions = self.client.post(BINARY_PREDICTION_URL, files={"image_file": image_file.file}).json()
 
             probability = predictions["predictions"][0]
 
@@ -36,10 +39,12 @@ class WildlensAPIService:
     async def classify_image(self, image_file: UploadFile) -> list[SpeciePrediction]:
         try:
             # Perform inference (preprocessing is handled in the model)
-            predictions = self.client.post(MULTICLASS_PREDICTION_URL, files={"image_file": image_file}).json()
+            predictions = self.client.post(MULTICLASS_PREDICTION_URL, files={"image_file": image_file.file}).json()
 
             # Get the top 3 predicted classes with their probabilities
+
             probability_by_classes = zip(predictions["predictions"], self.classes)
+
             top_3_predictions = sorted(probability_by_classes, key=lambda x: x[0], reverse=True)[:3]
 
             return [

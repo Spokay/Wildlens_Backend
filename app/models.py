@@ -20,8 +20,8 @@ class SpecieHabitat(SQLModel, table=True):
 class Identification(SQLModel, table=True):
     user_id: int = Field(foreign_key="user.id", primary_key=True)
     specie_id: int = Field(foreign_key="specie.id", primary_key=True)
+    file_storage_key: str = Field(sa_column=Column(String(255), primary_key=True))
     date_identified: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
-    file_storage_key: str = Field(sa_column=Column(String(255), unique=True))
 
 
 class Specie(SQLModel, table=True):
