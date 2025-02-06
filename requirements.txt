@@ -2,11 +2,11 @@ uvicorn~=0.34.0
 fastapi~=0.115.7
 starlette~=0.41.3
 python-dotenv~=1.0.1
-azure-storage-blob
-azure-identity
-python-multipart
+azure-storage-blob~=12.24.0
+azure-identity~=1.19.0
+python-multipart~=0.0.20
 pillow~=11.1.0
-numpy~=2.0.2
+numpy~=2.2.2
 pydantic~=2.10.6
 pydantic-core~=2.27.2
 sqlalchemy~=2.0.37

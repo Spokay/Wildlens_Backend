@@ -21,7 +21,7 @@ async def authenticate_user(session : Session, email: str, password: str):
     user : Optional[User] = await get_user_by_email(session, email)
     if not user:
         return False
-    if not verify_password(password, user.password):
+    if not await verify_password(password, user.password):
         return False
     return user
 

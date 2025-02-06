@@ -37,7 +37,6 @@ class AzureBlobService:
         except Exception as ex:
             raise HTTPException(status_code=500, detail=f"Failed to ensure container existence: {ex}")
 
-
     # Upload a file to the Azure Blob Storage
     async def upload_file(self, file: UploadFile):
         try:
@@ -46,12 +45,15 @@ class AzureBlobService:
             current_date = datetime.now().strftime("%Y%m%d_%H%M%S")
             blob_name = f"{BASE_PATH_IMAGES}{current_date}-{uuid.uuid4()}-{file.filename}"
 
-            async with file.file as file_stream:
-                await self.container_client.upload_blob(name=blob_name, data=file_stream, overwrite=True)
+            file_content = await file.read()
+
+            await self.container_client.upload_blob(name=blob_name, data=file_content, overwrite=False)
 
             return blob_name
         except Exception as ex:
             raise HTTPException(status_code=500, detail=f"File upload failed: {ex}")
+        finally:
+            await file.close()
 
     # Download a file from the Azure Blob Storage
     async def download_file(self, blob_name: str) -> bytes:
