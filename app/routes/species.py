@@ -6,7 +6,7 @@ from starlette import status
 from starlette.responses import JSONResponse
 
 from app.database import get_session
-from app.dto.species import SpecieResponse, SpeciePredictionResponse, SpecieBasicInfoResponse
+from app.dto.species import SpecieResponse, SpeciePredictionResponse, SpecieBasicInfoResponse, UploadInfo
 from app.dto.users import AuthenticatedUser
 from app.mappers.specie_mapper import get_specie_mapper
 from app.services.authentication_service import get_current_user
@@ -32,8 +32,6 @@ def assert_content_type_is_valid(content_type: str):
 )
 async def predict_image_class(
         image: UploadFile,
-        authenticated_user : Annotated[AuthenticatedUser, Depends(get_current_user)],
-        azure_blob_service: Annotated[AzureBlobService, Depends(get_azure_blob_service)],
         session: Session = Depends(get_session),
         wildlens_prediction_api_service: WildlensAPIService = Depends(get_wildlens_api_service),
         specie_mapper = Depends(get_specie_mapper)
@@ -44,12 +42,6 @@ async def predict_image_class(
     if await wildlens_prediction_api_service.check_image_for_footprint(image):
         # 2. if it is a footprint, predict the class of the image
         species_predictions = await wildlens_prediction_api_service.classify_image(image)
-
-        # 3. save the image in the blob storage if it is a footprint
-        blob_key = await azure_blob_service.upload_file(image)
-
-        # 4. save the Identification in the database for the maximum probability class
-        await save_identification(session, authenticated_user, species_predictions[0].class_number, blob_key)
 
         # 5. get the associated species data for each predicted class
         species = [await get_specie_by_class_number(prediction.class_number, session) for prediction in species_predictions]
@@ -62,6 +54,26 @@ async def predict_image_class(
         return JSONResponse({
             "message": "L'image n'est pas une empreinte",
         },422)
+
+
+
+@router.post(
+    '/upload_identification',
+    description="Upload an identification to the blob storage",
+    status_code=status.HTTP_200_OK
+)
+async def upload_identification(
+        upload_info : UploadInfo,
+        authenticated_user : Annotated[AuthenticatedUser, Depends(get_current_user)],
+        azure_blob_service: Annotated[AzureBlobService, Depends(get_azure_blob_service)],
+        session: Session = Depends(get_session),
+) -> JSONResponse:
+    # 3. save the image in the blob storage if it is a footprint
+    blob_key = await azure_blob_service.upload_file(image)
+
+    # 4. save the Identification in the database for the maximum probability class
+    await save_identification(session, authenticated_user, species_predictions[0].class_number, blob_key)
+
 
 
 @router.get(

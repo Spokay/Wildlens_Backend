@@ -9,8 +9,19 @@ from fastapi import UploadFile, HTTPException
 
 BASE_PATH_IMAGES = "images/"
 
+
+async def create_file_name(file: UploadFile) -> str:
+    current_date = datetime.now().strftime("%Y%m%d_%H%M%S")
+    blob_name = f"{BASE_PATH_IMAGES}{current_date}-{uuid.uuid4()}-{file.filename}"
+    return blob_name
+
+
 class AzureBlobService:
-    def __init__(self, account_name: str, account_key: str, container_name: str):
+    def __init__(self,
+                 account_name: str,
+                 account_key: str,
+                 container_name: str,
+    ):
 
         self.account_name = account_name
         self.account_key = account_key
@@ -44,9 +55,8 @@ class AzureBlobService:
 
             await self.ensure_container_exists()
 
-            current_date = datetime.now().strftime("%Y%m%d_%H%M%S")
-            blob_name = f"{BASE_PATH_IMAGES}{current_date}-{uuid.uuid4()}-{file.filename}"
-
+            blob_name = await create_file_name(file)
+             
             await self.container_client.upload_blob(name=blob_name, data=file.file, overwrite=False)
 
             return blob_name
@@ -78,6 +88,7 @@ class AzureBlobService:
             expiry=datetime.now(UTC) + timedelta(hours=expiry_hours)
         )
         return f"https://{self.account_name}.blob.core.windows.net/{self.container_name}/{blob_name}?{sas_token}"
+
 
 @lru_cache()
 def get_azure_blob_service():

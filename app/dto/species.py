@@ -43,3 +43,8 @@ class SpeciePredictionResponse(SQLModel):
     probability: float
 
 
+class UploadInfo(BaseModel):
+    class_number: int
+    user_id: int
+    file_storage_key: str
+
