@@ -6,12 +6,12 @@ from starlette import status
 from starlette.responses import JSONResponse
 
 from app.database import get_session
-from app.dto.species import SpecieResponse, SpeciePredictionResponse, SpecieBasicInfoResponse
-from app.dto.users import AuthenticatedUser
+from app.dto.species import SpecieResponse, SpecieBasicInfoResponse, UploadInfo, \
+    SpecieClassificationResponse
 from app.mappers.specie_mapper import get_specie_mapper
-from app.services.authentication_service import get_current_user
-from app.services.azure_blob_service import AzureBlobService, get_azure_blob_service
-from app.services.specie_service import get_specie_by_class_number, save_identification, get_identified_species_by_user
+from app.services.azure_blob_service import AzureBlobService, get_azure_blob_service, add_base_path_to_file_name
+from app.services.specie_service import get_specie_by_class_number, save_identification, get_identified_species_by_user, \
+    upload_blob_from_temp_file, save_temporary_file
 from app.services.wildlens_api_service import WildlensAPIService, get_wildlens_api_service
 
 router = APIRouter(
@@ -20,36 +20,31 @@ router = APIRouter(
 )
 
 
-def assert_content_type_is_valid(content_type: str):
+async def assert_content_type_is_valid(content_type: str):
     if content_type not in ["image/jpeg", "image/png"]:
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload a JPEG or PNG image.")
 
 @router.post(
     "/predict",
     description="Predicts the class of an image and saves the identification in the database",
-    response_model=list[SpeciePredictionResponse],
+    response_model=SpecieClassificationResponse,
     status_code=status.HTTP_200_OK
 )
 async def predict_image_class(
         image: UploadFile,
-        authenticated_user : Annotated[AuthenticatedUser, Depends(get_current_user)],
-        azure_blob_service: Annotated[AzureBlobService, Depends(get_azure_blob_service)],
         session: Session = Depends(get_session),
         wildlens_prediction_api_service: WildlensAPIService = Depends(get_wildlens_api_service),
         specie_mapper = Depends(get_specie_mapper)
-) -> list[SpeciePredictionResponse] | JSONResponse:
-    assert_content_type_is_valid(image.content_type)
+) -> SpecieClassificationResponse | JSONResponse:
+
+    await assert_content_type_is_valid(image.content_type)
 
     # 1. check if the image is a footprint
     if await wildlens_prediction_api_service.check_image_for_footprint(image):
         # 2. if it is a footprint, predict the class of the image
         species_predictions = await wildlens_prediction_api_service.classify_image(image)
 
-        # 3. save the image in the blob storage if it is a footprint
-        blob_key = await azure_blob_service.upload_file(image)
-
-        # 4. save the Identification in the database for the maximum probability class
-        await save_identification(session, authenticated_user, species_predictions[0].class_number, blob_key)
+        tmp_file_path, image_file_name = await save_temporary_file(image)
 
         # 5. get the associated species data for each predicted class
         species = [await get_specie_by_class_number(prediction.class_number, session) for prediction in species_predictions]
@@ -57,11 +52,38 @@ async def predict_image_class(
         # 6. prepare the response
         species_response = await specie_mapper.species_to_prediction_responses(species, species_predictions)
 
-        return species_response
+        return SpecieClassificationResponse(
+            predictions_response=species_response,
+            tmp_file_path=tmp_file_path,
+            image_file_name=image_file_name
+        )
     else:
         return JSONResponse({
             "message": "L'image n'est pas une empreinte",
         },422)
+
+
+
+@router.post(
+    '/upload_identification',
+    description="Upload an identification to the blob storage",
+    status_code=status.HTTP_200_OK
+)
+async def upload_identification(
+        upload_info : UploadInfo,
+        azure_blob_service: Annotated[AzureBlobService, Depends(get_azure_blob_service)],
+        session: Session = Depends(get_session),
+) -> JSONResponse:
+
+    await upload_blob_from_temp_file(upload_info, azure_blob_service)
+
+    file_storage_key = await add_base_path_to_file_name(upload_info.image_file_name)
+
+    await save_identification(session, upload_info.user_id, upload_info.specie_id, file_storage_key)
+
+    return JSONResponse({
+        "message": "Identification enregistrée avec succès"
+    })
 
 
 @router.get(

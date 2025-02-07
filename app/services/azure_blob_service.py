@@ -3,14 +3,29 @@ import uuid
 from datetime import datetime, timedelta, UTC
 from functools import lru_cache
 
+from PIL.ImageFile import ImageFile
 from azure.storage.blob import generate_blob_sas, BlobSasPermissions
 from azure.storage.blob.aio import BlobServiceClient, ContainerClient
 from fastapi import UploadFile, HTTPException
 
 BASE_PATH_IMAGES = "images/"
 
+
+async def create_file_name(file: UploadFile) -> str:
+    current_date = datetime.now().strftime("%Y%m%d_%H%M%S")
+    blob_name = f"{current_date}-{uuid.uuid4()}-{file.filename}"
+    return blob_name
+
+async def add_base_path_to_file_name(file_name: str) -> str:
+    return f"{BASE_PATH_IMAGES}{file_name}"
+
+
 class AzureBlobService:
-    def __init__(self, account_name: str, account_key: str, container_name: str):
+    def __init__(self,
+                 account_name: str,
+                 account_key: str,
+                 container_name: str,
+    ):
 
         self.account_name = account_name
         self.account_key = account_key
@@ -37,23 +52,17 @@ class AzureBlobService:
         except Exception as ex:
             raise HTTPException(status_code=500, detail=f"Failed to ensure container existence: {ex}")
 
-    # Upload a file to the Azure Blob Storage
-    async def upload_file(self, file: UploadFile):
-        try:
-            file.file.seek(0)
 
+    async def upload_image(self, file: bytes, file_name : str):
+        try:
             await self.ensure_container_exists()
 
-            current_date = datetime.now().strftime("%Y%m%d_%H%M%S")
-            blob_name = f"{BASE_PATH_IMAGES}{current_date}-{uuid.uuid4()}-{file.filename}"
+            file_name = await add_base_path_to_file_name(file_name)
 
-            await self.container_client.upload_blob(name=blob_name, data=file.file, overwrite=False)
+            await self.container_client.upload_blob(name=file_name, data=file, overwrite=False)
 
-            return blob_name
         except Exception as ex:
             raise HTTPException(status_code=500, detail=f"File upload failed: {ex}")
-        finally:
-            await file.close()
 
     # Download a file from the Azure Blob Storage
     async def download_file(self, blob_name: str) -> bytes:
@@ -78,6 +87,7 @@ class AzureBlobService:
             expiry=datetime.now(UTC) + timedelta(hours=expiry_hours)
         )
         return f"https://{self.account_name}.blob.core.windows.net/{self.container_name}/{blob_name}?{sas_token}"
+
 
 @lru_cache()
 def get_azure_blob_service():

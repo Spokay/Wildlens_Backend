@@ -1,0 +1,20 @@
+meta {
+  name: Upload Identification
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{BASE_URL}}/species/upload_identification
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "specie_id": 1,
+    "user_id": 2,
+    "tmp_file_path": "C:\\Users\\hbres\\AppData\\Local\\Temp\\tmpug6o7dsj\\20250207_191641-7898c202-eb4a-4881-911e-709b1f306c4a-Ours_02.jpg",
+    "image_file_name": "20250207_191641-7898c202-eb4a-4881-911e-709b1f306c4a-Ours_02.jpg"
+  }
+}
