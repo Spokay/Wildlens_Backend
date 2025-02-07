@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timedelta, UTC
 from functools import lru_cache
 
+from PIL.ImageFile import ImageFile
 from azure.storage.blob import generate_blob_sas, BlobSasPermissions
 from azure.storage.blob.aio import BlobServiceClient, ContainerClient
 from fastapi import UploadFile, HTTPException
@@ -12,8 +13,11 @@ BASE_PATH_IMAGES = "images/"
 
 async def create_file_name(file: UploadFile) -> str:
     current_date = datetime.now().strftime("%Y%m%d_%H%M%S")
-    blob_name = f"{BASE_PATH_IMAGES}{current_date}-{uuid.uuid4()}-{file.filename}"
+    blob_name = f"{current_date}-{uuid.uuid4()}-{file.filename}"
     return blob_name
+
+async def add_base_path_to_file_name(file_name: str) -> str:
+    return f"{BASE_PATH_IMAGES}{file_name}"
 
 
 class AzureBlobService:
@@ -48,22 +52,17 @@ class AzureBlobService:
         except Exception as ex:
             raise HTTPException(status_code=500, detail=f"Failed to ensure container existence: {ex}")
 
-    # Upload a file to the Azure Blob Storage
-    async def upload_file(self, file: UploadFile):
-        try:
-            file.file.seek(0)
 
+    async def upload_image(self, file: bytes, file_name : str):
+        try:
             await self.ensure_container_exists()
 
-            blob_name = await create_file_name(file)
-             
-            await self.container_client.upload_blob(name=blob_name, data=file.file, overwrite=False)
+            file_name = await add_base_path_to_file_name(file_name)
 
-            return blob_name
+            await self.container_client.upload_blob(name=file_name, data=file, overwrite=False)
+
         except Exception as ex:
             raise HTTPException(status_code=500, detail=f"File upload failed: {ex}")
-        finally:
-            await file.close()
 
     # Download a file from the Azure Blob Storage
     async def download_file(self, blob_name: str) -> bytes:

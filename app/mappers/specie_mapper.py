@@ -79,7 +79,10 @@ class SpecieMapper:
             probability=probability
         )
 
-    async def species_to_prediction_responses(self, species: list[Specie], predictions: list[SpeciePrediction]) -> list[
+    async def species_to_prediction_responses(
+            self, species: list[Specie],
+            predictions: list[SpeciePrediction]
+    ) -> list[
         SpeciePredictionResponse]:
         return [
             await self.specie_to_prediction_response(specie, prediction.probability) for specie, prediction in

@@ -42,9 +42,15 @@ class SpeciePredictionResponse(SQLModel):
     habitats: list["HabitatResponse"]
     probability: float
 
+class SpecieClassificationResponse(BaseModel):
+    predictions_response: list[SpeciePredictionResponse]
+    tmp_file_path: str
+    image_file_name: str
+
 
 class UploadInfo(BaseModel):
-    class_number: int
+    specie_id: int
     user_id: int
-    file_storage_key: str
+    image_file_name: str
+    tmp_file_path: str
 

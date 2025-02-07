@@ -1,4 +1,5 @@
 import os
+import pathlib
 import re
 
 # Prediction API
@@ -9,6 +10,9 @@ WILDLENS_PREDICTION_API_KEY = os.getenv("WILDLENS_PREDICTION_API_KEY", "")
 
 
 NUMBER_OF_CLASSES = 1
+
+PROJECT_ROOT = pathlib.Path(__file__).resolve().parent.parent
+
 
 # JWT
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
