@@ -40,14 +40,14 @@ class AzureBlobService:
     # Upload a file to the Azure Blob Storage
     async def upload_file(self, file: UploadFile):
         try:
+            file.file.seek(0)
+
             await self.ensure_container_exists()
 
             current_date = datetime.now().strftime("%Y%m%d_%H%M%S")
             blob_name = f"{BASE_PATH_IMAGES}{current_date}-{uuid.uuid4()}-{file.filename}"
 
-            file_content = await file.read()
-
-            await self.container_client.upload_blob(name=blob_name, data=file_content, overwrite=False)
+            await self.container_client.upload_blob(name=blob_name, data=file.file, overwrite=False)
 
             return blob_name
         except Exception as ex:

@@ -25,6 +25,7 @@ class WildlensAPIService:
 
     async def check_image_for_footprint(self, image_file: UploadFile) -> bool:
         try:
+            image_file.file.seek(0)
             # Perform inference with the Prediction API (preprocessing is handled in the model)
             predictions = self.client.post(BINARY_PREDICTION_URL, files={"image_file": image_file.file}).json()
 
@@ -38,6 +39,7 @@ class WildlensAPIService:
 
     async def classify_image(self, image_file: UploadFile) -> list[SpeciePrediction]:
         try:
+            image_file.file.seek(0)
             # Perform inference (preprocessing is handled in the model)
             predictions = self.client.post(MULTICLASS_PREDICTION_URL, files={"image_file": image_file.file}).json()
 

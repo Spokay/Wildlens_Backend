@@ -1,4 +1,3 @@
-import os
 from typing import Annotated
 
 from fastapi import UploadFile, APIRouter, HTTPException, Depends
@@ -34,8 +33,8 @@ def assert_content_type_is_valid(content_type: str):
 async def predict_image_class(
         image: UploadFile,
         authenticated_user : Annotated[AuthenticatedUser, Depends(get_current_user)],
+        azure_blob_service: Annotated[AzureBlobService, Depends(get_azure_blob_service)],
         session: Session = Depends(get_session),
-        azure_blob_service: AzureBlobService = Depends(get_azure_blob_service),
         wildlens_prediction_api_service: WildlensAPIService = Depends(get_wildlens_api_service),
         specie_mapper = Depends(get_specie_mapper)
 ) -> list[SpeciePredictionResponse] | JSONResponse:
@@ -43,7 +42,6 @@ async def predict_image_class(
 
     # 1. check if the image is a footprint
     if await wildlens_prediction_api_service.check_image_for_footprint(image):
-
         # 2. if it is a footprint, predict the class of the image
         species_predictions = await wildlens_prediction_api_service.classify_image(image)
 
