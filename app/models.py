@@ -2,7 +2,7 @@ import datetime as dt
 from typing import Dict
 
 from pydantic import ConfigDict
-from sqlalchemy import String, Column, JSON
+from sqlalchemy import String, Column, JSON, TEXT
 from sqlmodel import SQLModel, Field, Relationship
 
 
@@ -32,8 +32,8 @@ class Specie(SQLModel, table=True):
     size: str = Field(default=None)
     region: str = Field(default=None)
     fun_fact: str = Field(default=None)
-    specie_exemple_photo: str = Field(sa_column=Column(String(255), unique=True))
-    footprint_exemple_photo: str = Field(sa_column=Column(String(255), unique=True))
+    specie_exemple_photo: str = Field(sa_column=Column(TEXT))
+    footprint_exemple_photo: str = Field(sa_column=Column(TEXT))
     family_id: int = Field(foreign_key="family.id")
     family: "Family" = Relationship(back_populates="species")
     habitats: list["Habitat"] = Relationship(back_populates="species", link_model=SpecieHabitat)
