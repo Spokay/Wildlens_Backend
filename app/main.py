@@ -11,7 +11,7 @@ import uvicorn
 from fastapi import FastAPI, Depends
 from sqlmodel import Session
 
-from app.services.authentication_service import AuthMiddleware
+from app.services.authentication_service import AuthMiddleware, ExceptionHandlerLoggingMiddleware
 from app.database import create_db_and_tables, get_session, database_engine
 from app.routes import users, species
 
@@ -38,6 +38,7 @@ app = FastAPI(
 )
 
 app.add_middleware(AuthMiddleware)
+app.add_middleware(ExceptionHandlerLoggingMiddleware)
 
 app.include_router(users.router)
 app.include_router(species.router)

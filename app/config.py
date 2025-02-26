@@ -1,6 +1,12 @@
+import logging
 import os
 import pathlib
 import re
+
+
+# Logging configuration
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Prediction API
 WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD = 0.6
