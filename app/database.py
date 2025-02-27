@@ -6,11 +6,15 @@ from sqlmodel import SQLModel, Session
 from app.models import Role, Family, Habitat, Specie, User, Badge, UserBadge, SpecieHabitat, Identification, \
     BadgeCriteria
 
-params = os.getenv("AZURE_DATABASE_CONNECTION_PARAMS")
+host = os.getenv('DB_HOST')
+port = os.getenv('DB_PORT')
+database = os.getenv('DB_NAME')
+user = os.getenv('DB_USER')
+password = os.getenv('DB_PASSWORD')
 
-conn_string = f'mssql+pyodbc:///?odbc_connect={params}'
+conn_string = f"mariadb+pymysql://{user}:{password}@{host}:{port}/{database}"
 
-database_engine = create_engine(conn_string, echo=True)
+database_engine = create_engine(conn_string)
 
 
 def create_db_and_tables(engine):
