@@ -12,9 +12,7 @@ database = os.getenv('DB_NAME')
 user = os.getenv('DB_USER')
 password = os.getenv('DB_PASSWORD')
 
-conn_string = f"mysql://{user}:{password}@{host}:{port}/{database}"
-
-print(conn_string)
+conn_string = f"mariadb+pymysql://{user}:{password}@{host}:{port}/{database}"
 
 database_engine = create_engine(conn_string)
 
