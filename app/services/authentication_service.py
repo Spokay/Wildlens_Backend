@@ -1,3 +1,4 @@
+import traceback
 from functools import wraps
 from typing import Optional
 
@@ -8,8 +9,9 @@ from sqlmodel import Session
 from starlette import status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
+from starlette.responses import JSONResponse
 
-from app.config import EXCLUDED_PATHS
+from app.config import EXCLUDED_PATHS, logger
 from app.dto.users import AuthenticatedUser
 from app.models import User
 from app.services.token_service import decode_access_token
@@ -17,11 +19,11 @@ from app.services.user_service import get_user_by_email, verify_password
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/token")
 
-def authenticate_user(session : Session, email: str, password: str):
-    user : Optional[User] = get_user_by_email(session, email)
+async def authenticate_user(session : Session, email: str, password: str):
+    user : Optional[User] = await get_user_by_email(session, email)
     if not user:
         return False
-    if not verify_password(password, user.password):
+    if not await verify_password(password, user.password):
         return False
     return user
 
@@ -60,7 +62,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             )
 
         try:
-            payload : dict = decode_access_token(token)
+            payload : dict = await decode_access_token(token)
             email = payload.get("sub")
             user_id = payload.get("user_id")
             role_name = payload.get("role")
@@ -74,6 +76,25 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         response = await call_next(request)
         return response
+
+class ExceptionHandlerLoggingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        try:
+            response = await call_next(request)
+            return response
+        except HTTPException as http_exc:
+            logger.info(f"HTTP error: {http_exc.detail} (status: {http_exc.status_code})")
+            return JSONResponse(
+                status_code=http_exc.status_code,
+                content={"detail": http_exc.detail}
+            )
+        except Exception as e:
+            logger.error(f"Unhandled error: {e}")
+            logger.debug(traceback.format_exc())
+            return JSONResponse(
+                status_code=500,
+                content={"detail": "An unexpected error occurred."}
+            )
 
 def role_required(role: str):
     def decorator(func):

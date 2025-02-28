@@ -1,3 +1,5 @@
+import os
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,11 +13,9 @@ import uvicorn
 from fastapi import FastAPI, Depends
 from sqlmodel import Session
 
-from app.services.authentication_service import AuthMiddleware
-from app.database import create_db_and_tables, get_session
+from app.services.authentication_service import AuthMiddleware, ExceptionHandlerLoggingMiddleware
+from app.database import create_db_and_tables, get_session, database_engine
 from app.routes import users, species
-
-
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
@@ -23,7 +23,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 @asynccontextmanager
 async def lifespan(app_object: FastAPI):
     # Executed before startup (setup):
-    # create_db_and_tables(database_engine)
+    create_db_and_tables(database_engine)
     # ------------------------------
     yield  # <--- This is where the context manager pauses and the application starts
     # ------------------------------
@@ -38,9 +38,11 @@ app = FastAPI(
 )
 
 app.add_middleware(AuthMiddleware)
+app.add_middleware(ExceptionHandlerLoggingMiddleware)
 
 app.include_router(users.router)
 app.include_router(species.router)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    port = int(os.getenv("APP_PORT", 8001))
+    uvicorn.run(app, host="0.0.0.0", port=port)

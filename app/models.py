@@ -2,7 +2,7 @@ import datetime as dt
 from typing import Dict
 
 from pydantic import ConfigDict
-from sqlalchemy import String, Column, JSON
+from sqlalchemy import String, Column, JSON, TEXT
 from sqlmodel import SQLModel, Field, Relationship
 
 
@@ -20,18 +20,20 @@ class SpecieHabitat(SQLModel, table=True):
 class Identification(SQLModel, table=True):
     user_id: int = Field(foreign_key="user.id", primary_key=True)
     specie_id: int = Field(foreign_key="specie.id", primary_key=True)
+    file_storage_key: str = Field(sa_column=Column(String(255), primary_key=True))
     date_identified: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
-    file_storage_key: str = Field(sa_column=Column(String(255), unique=True))
 
 
 class Specie(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str = Field(sa_column=Column(String(255), index=True))
-    latin_name: str = Field(default=None)
-    description: str = Field(default=None)
-    size: str = Field(default=None)
-    region: str = Field(default=None)
-    fun_fact: str = Field(default=None)
+    latin_name: str = Field(sa_column=Column(String(255)))
+    description: str = Field(sa_column=Column(TEXT))
+    size: str = Field(sa_column=Column(String(255)))
+    region: str = Field(sa_column=Column(String(255)))
+    fun_fact: str = Field(sa_column=Column(TEXT))
+    specie_exemple_photo: str = Field(sa_column=Column(TEXT))
+    footprint_exemple_photo: str = Field(sa_column=Column(TEXT))
     family_id: int = Field(foreign_key="family.id")
     family: "Family" = Relationship(back_populates="species")
     habitats: list["Habitat"] = Relationship(back_populates="species", link_model=SpecieHabitat)
@@ -41,7 +43,7 @@ class Specie(SQLModel, table=True):
 class Habitat(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str = Field(sa_column=Column(String(255), index=True))
-    description: str = Field(default=None)
+    description: str = Field(sa_column=Column(TEXT))
     species: list["Specie"] = Relationship(back_populates="habitats", link_model=SpecieHabitat)
 
 
@@ -61,7 +63,7 @@ class UserBadge(SQLModel, table=True):
 class User(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     email: str = Field(sa_column=Column(String(255), index=True))
-    password: str
+    password: str = Field(sa_column=Column(TEXT))
     disabled: bool = Field(default=False)
     created_at: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
     updated_at: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
@@ -75,7 +77,7 @@ class User(SQLModel, table=True):
 class Badge(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str = Field(sa_column=Column(String(255), index=True))
-    description: str = Field(default=None)
+    description: str = Field(sa_column=Column(TEXT))
     users: list["User"] = Relationship(back_populates="badges", link_model=UserBadge)
 
 class BadgeCriteria(SQLModel, table=True):

@@ -1,15 +1,34 @@
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta, UTC
+from functools import lru_cache
 
+from PIL.ImageFile import ImageFile
+from azure.storage.blob import generate_blob_sas, BlobSasPermissions
 from azure.storage.blob.aio import BlobServiceClient, ContainerClient
 from fastapi import UploadFile, HTTPException
 
 BASE_PATH_IMAGES = "images/"
 
-class AzureBlobService:
-    def __init__(self, account_name: str, account_key: str, container_name: str):
 
+async def create_file_name(file: UploadFile) -> str:
+    current_date = datetime.now().strftime("%Y%m%d_%H%M%S")
+    blob_name = f"{current_date}-{uuid.uuid4()}-{file.filename}"
+    return blob_name
+
+async def add_base_path_to_file_name(file_name: str) -> str:
+    return f"{BASE_PATH_IMAGES}{file_name}"
+
+
+class AzureBlobService:
+    def __init__(self,
+                 account_name: str,
+                 account_key: str,
+                 container_name: str,
+    ):
+
+        self.account_name = account_name
+        self.account_key = account_key
         # Azure Blob storage client initialization
         try:
             self.container_name = container_name
@@ -34,18 +53,14 @@ class AzureBlobService:
             raise HTTPException(status_code=500, detail=f"Failed to ensure container existence: {ex}")
 
 
-    # Upload a file to the Azure Blob Storage
-    async def upload_file(self, file: UploadFile):
+    async def upload_image(self, file: bytes, file_name : str):
         try:
             await self.ensure_container_exists()
 
-            current_date = datetime.now().strftime("%Y%m%d_%H%M%S")
-            blob_name = f"{BASE_PATH_IMAGES}{current_date}-{uuid.uuid4()}-{file.filename}"
+            file_name = await add_base_path_to_file_name(file_name)
 
-            async with file.file as file_stream:
-                await self.container_client.upload_blob(name=blob_name, data=file_stream, overwrite=True)
+            await self.container_client.upload_blob(name=file_name, data=file, overwrite=False)
 
-            return blob_name
         except Exception as ex:
             raise HTTPException(status_code=500, detail=f"File upload failed: {ex}")
 
@@ -62,9 +77,22 @@ class AzureBlobService:
         except Exception as ex:
             raise HTTPException(status_code=404, detail=f"Blob '{blob_name}' not found: {ex}")
 
+    async def generate_sas_token(self, blob_name: str, expiry_hours: int = 1) -> str:
+        sas_token = generate_blob_sas(
+            account_name=self.account_name,
+            container_name=self.container_name,
+            blob_name=blob_name,
+            account_key=self.account_key,
+            permission=BlobSasPermissions(read=True),
+            expiry=datetime.now(UTC) + timedelta(hours=expiry_hours)
+        )
+        return f"https://{self.account_name}.blob.core.windows.net/{self.container_name}/{blob_name}?{sas_token}"
 
-azure_blob_service = AzureBlobService(
+
+@lru_cache()
+def get_azure_blob_service():
+    return AzureBlobService(
         account_name=os.getenv('AZURE_STORAGE_ACCOUNT_NAME'),
         account_key=os.getenv('AZURE_STORAGE_ACCOUNT_KEY'),
         container_name=os.getenv('AZURE_STORAGE_CONTAINER_NAME')
-)
+    )
