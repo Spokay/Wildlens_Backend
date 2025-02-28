@@ -17,8 +17,6 @@ from app.services.authentication_service import AuthMiddleware, ExceptionHandler
 from app.database import create_db_and_tables, get_session, database_engine
 from app.routes import users, species
 
-
-
 SessionDep = Annotated[Session, Depends(get_session)]
 
 

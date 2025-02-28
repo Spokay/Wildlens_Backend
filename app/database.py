@@ -6,15 +6,23 @@ from sqlmodel import SQLModel, Session
 from app.models import Role, Family, Habitat, Specie, User, Badge, UserBadge, SpecieHabitat, Identification, \
     BadgeCriteria
 
-host = os.getenv('DB_HOST')
-port = os.getenv('DB_PORT')
-database = os.getenv('DB_NAME')
-user = os.getenv('DB_USER')
-password = os.getenv('DB_PASSWORD')
+host = os.getenv('DB_HOST', 'localhost')
+port = os.getenv('DB_PORT', 3306)
+database = os.getenv('DB_NAME', '')
+user = os.getenv('DB_USER', '')
+password = os.getenv('DB_PASSWORD', '')
 
 conn_string = f"mariadb+pymysql://{user}:{password}@{host}:{port}/{database}"
 
 database_engine = create_engine(conn_string)
+
+def get_session():
+    with Session(database_engine) as session:
+        try:
+            yield session
+        finally:
+            session.close()
+
 
 
 def create_db_and_tables(engine):
@@ -112,8 +120,3 @@ def create_db_and_tables(engine):
     # session.refresh(badge_criteria4)
     # session.close()
 
-
-
-def get_session():
-    with Session(database_engine) as session:
-        yield session

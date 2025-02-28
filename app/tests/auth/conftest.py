@@ -1,13 +1,34 @@
 import pytest
+from sqlalchemy import create_engine
+from sqlmodel import SQLModel, Session
 
+from app.database import create_db_and_tables
 from app.dto.users import AuthenticatedUser
+from app.main import app
 
+TEST_DATABASE_URL = "sqlite:///:memory:"
+test_database_engine = create_engine(TEST_DATABASE_URL)
+
+
+@pytest.fixture(scope="function")
+def test_session():
+    # Creates a new database session with an in-memory DB
+    create_db_and_tables(test_database_engine)
+    with Session(test_database_engine) as session:
+        try:
+            yield session
+        finally:
+            # Clean up after the test
+            session.close()
+            SQLModel.metadata.drop_all(test_database_engine)
 
 @pytest.fixture
-def client():
+def client(test_session):
     from fastapi.testclient import TestClient
-    from app.main import app
+    def override_get_db():
+        yield test_session
 
+    app.dependency_overrides[test_session] = override_get_db
     return TestClient(
         app,
         root_path="/api"
