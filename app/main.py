@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 
 import uvicorn
+from prometheus_fastapi_instrumentator import Instrumentator
 from fastapi import FastAPI, Depends
 from sqlmodel import Session
 
@@ -36,6 +37,8 @@ app = FastAPI(
     root_path=API_PREFIX,
     lifespan=lifespan
 )
+
+Instrumentator().instrument(app).expose(app)
 
 app.add_middleware(AuthMiddleware)
 app.add_middleware(ExceptionHandlerLoggingMiddleware)
