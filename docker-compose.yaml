@@ -13,9 +13,9 @@ services:
     networks:
       - wildlens_network
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      test: [ "CMD", "mariadb-admin", "ping", "-h", "127.0.0.1" ]
       interval: 10s
-      retries: 5
+      retries: 10
       start_period: 30s
 
   wildlens_backend:
@@ -36,5 +36,5 @@ networks:
     driver: bridge
 
 volumes:
-    mariadb_data:
-        driver: local
+  mariadb_data:
+    driver: local
