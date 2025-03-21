@@ -9,9 +9,13 @@ COPY ./app /app/app
 COPY ./requirements.txt /app
 COPY ./entrypoint.sh /app
 
+RUN apk add --no-cache dos2unix && dos2unix /app/entrypoint.sh
+
+RUN chmod +x /app/entrypoint.sh
+
 # Install any required dependencies
 RUN ["pip", "install", "-r", "requirements.txt"]
 
 ENV FALLBACK_PORT=8001
 
-ENTRYPOINT ["entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint.sh"]
