@@ -35,6 +35,7 @@ email_validation_regex = re.compile(r"([-!#-'*+/-9=?A-Z^-~]+(\.[-!#-'*+/-9=?A-Z^
 API_PREFIX = os.getenv("API_PREFIX", "/api")
 
 EXCLUDED_PATHS = [
+    "/metrics", # Prometheus metrics
     "/docs", # Swagger UI
     f"{API_PREFIX}/openapi.json", # OpenAPI schema
     f"{API_PREFIX}/users/token", # Login
