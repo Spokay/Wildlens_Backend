@@ -39,6 +39,17 @@ def create_db_and_tables(engine):
         BadgeCriteria.__table__
     ], checkfirst=True)
 
+    # add default roles
+    with Session(engine) as session:
+        role1 = Role(name="ADMIN")
+        role2 = Role(name="USER")
+        session.add(role1)
+        session.add(role2)
+        session.commit()
+        session.refresh(role1)
+        session.refresh(role2)
+        session.close()
+
     # session = Session(engine)
     #
     # criteria1 = {
