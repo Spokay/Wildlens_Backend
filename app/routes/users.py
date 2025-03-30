@@ -62,7 +62,13 @@ async def register_user(
     session: Session = Depends(get_session)
 ) -> Token:
     try:
-        
+
+        if not await is_password_valid(form_data.password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Password is not valid",
+            )
+
         if await user_exists(session, form_data.username):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
