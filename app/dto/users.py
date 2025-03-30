@@ -3,5 +3,5 @@ from pydantic import BaseModel
 
 class AuthenticatedUser(BaseModel):
     user_id: int
-    email: str
+    username: str
     role_name: str

@@ -45,13 +45,13 @@ class Habitat(SQLModel, table=True):
     name: str = Field(sa_column=Column(String(255), index=True))
     description: str = Field(sa_column=Column(TEXT))
     species: list["Specie"] = Relationship(back_populates="habitats", link_model=SpecieHabitat)
+    habitat_photo: str = Field(sa_column=Column(TEXT))
 
 
 class Role(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str = Field(sa_column=Column(String(255), index=True))
     users: list["User"] = Relationship(back_populates="role")
-
 
 
 class UserBadge(SQLModel, table=True):
@@ -62,7 +62,8 @@ class UserBadge(SQLModel, table=True):
 
 class User(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    email: str = Field(sa_column=Column(String(255), index=True))
+    username: str = Field(sa_column=Column(String(255), index=True, unique=True))
+    email: str = Field(sa_column=Column(String(255), index=True, unique=True))
     password: str = Field(sa_column=Column(TEXT))
     disabled: bool = Field(default=False)
     created_at: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
@@ -71,8 +72,7 @@ class User(SQLModel, table=True):
     role: "Role" = Relationship(back_populates="users")
     species: list["Specie"] = Relationship(back_populates="users", link_model=Identification)
     badges: list["Badge"] = Relationship(back_populates="users", link_model=UserBadge)
-
-
+    profile_picture: str = Field(sa_column=Column(TEXT), nullable=True)
 
 class Badge(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)

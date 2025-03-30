@@ -13,7 +13,7 @@ from app.dto.users import AuthenticatedUser
 from app.services.authentication_service import authenticate_user, get_current_user
 from app.services.badge_service import get_user_badges
 from app.services.token_service import Token, create_access_token
-from app.services.user_service import is_email_valid, is_password_valid, create_user, user_exists
+from app.services.user_service import is_password_valid, create_user, user_exists
 
 router = APIRouter(
     prefix="/users",
@@ -42,7 +42,7 @@ async def login_for_access_token(
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await create_access_token(
         data={
-            "sub": user.email,
+            "sub": user.username,
             "user_id": user.id,
             "role": user.role.name
         }, expires_delta=access_token_expires
@@ -59,10 +59,10 @@ async def register_user(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     session: Session = Depends(get_session)
 ) -> Token:
-    if not await is_email_valid(form_data.username) or not await is_password_valid(form_data.password):
+    if not await is_password_valid(form_data.password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username and password are not valid",
+            detail="Password is not valid",
         )
 
     if await user_exists(session, form_data.username):
@@ -76,7 +76,7 @@ async def register_user(
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await create_access_token(
         data={
-            "sub": created_user.email,
+            "sub": created_user.username,
             "user_id": created_user.id,
             "role": created_user.role.name
         }, expires_delta=access_token_expires
