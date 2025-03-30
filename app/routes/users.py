@@ -14,7 +14,7 @@ from app.dto.users import AuthenticatedUser, RegisterRequest
 from app.services.authentication_service import authenticate_user, get_current_user
 from app.services.badge_service import get_user_badges
 from app.services.token_service import Token, create_access_token
-from app.services.user_service import is_email_valid, is_password_valid, create_user, user_exists
+from app.services.user_service import is_password_valid, create_user, user_exists
 
 router = APIRouter(
     prefix="/users",
@@ -44,7 +44,7 @@ async def login_for_access_token(
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await create_access_token(
         data={
-            "sub": user.email,
+            "sub": user.username,
             "user_id": user.id,
             "role": user.role.name
         }, expires_delta=access_token_expires
