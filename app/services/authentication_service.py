@@ -15,12 +15,12 @@ from app.config import EXCLUDED_PATHS, logger
 from app.dto.users import AuthenticatedUser
 from app.models import User
 from app.services.token_service import decode_access_token
-from app.services.user_service import get_user_by_email, verify_password
+from app.services.user_service import get_user_by_username, verify_password
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/token")
 
-async def authenticate_user(session : Session, email: str, password: str):
-    user : Optional[User] = await get_user_by_email(session, email)
+async def authenticate_user(session : Session, username: str, password: str):
+    user : Optional[User] = await get_user_by_username(session, username)
     if not user:
         return False
     if not await verify_password(password, user.password):
@@ -29,13 +29,13 @@ async def authenticate_user(session : Session, email: str, password: str):
 
 async def get_current_user(request: Request) -> AuthenticatedUser:
     user_id = request.state.user_id
-    email = request.state.email
+    username = request.state.username
     role_name = request.state.role_name
 
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
 
-    return AuthenticatedUser(user_id=user_id, email=email, role_name=role_name)
+    return AuthenticatedUser(user_id=user_id, username=username, role_name=role_name)
 
 
 async def extract_token_from_request(request: Request) -> str:
@@ -63,12 +63,12 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         try:
             payload : dict = await decode_access_token(token)
-            email = payload.get("sub")
+            username = payload.get("sub")
             user_id = payload.get("user_id")
             role_name = payload.get("role")
 
             request.state.user_id = user_id
-            request.state.email = email
+            request.state.username = username
             request.state.role_name = role_name
 
         except InvalidTokenError:
