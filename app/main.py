@@ -47,5 +47,5 @@ app.include_router(users.router)
 app.include_router(species.router)
 
 if __name__ == "__main__":
-    port = int(os.getenv("APP_PORT", 8001))
+    port = int(os.getenv("APP_PORT", 8002))
     uvicorn.run(app, host="0.0.0.0", port=port)
