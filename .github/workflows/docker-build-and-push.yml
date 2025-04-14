@@ -1,0 +1,47 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  DOCKER_REGISTRY_HOST: $DOCKER_REGISTRY_HOST
+  DOCKER_REGISTRY_PASSWORD: $DOCKER_REGISTRY_PASSWORD
+  DOCKER_REGISTRY_USERNAME: $DOCKER_REGISTRY_USERNAME
+  DOCKER_IMAGE_NAME: wildlens-backend
+  DOCKER_IMAGE_VERSION: latest
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    # Build the docker image
+    - uses: actions/checkout@v4
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag $DOCKER_REGISTRY_HOST/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_VERSION
+
+
+    # Login to the registry
+    - name: Docker Login
+      uses: docker/login-action@v3.4.0
+      with:
+        # Server address of Docker registry. If not set then will default to Docker Hub
+        registry: $DOCKER_REGISTRY_HOST
+        # Username used to log against the Docker registry
+        username: $DOCKER_REGISTRY_USERNAME
+        # Password or personal access token used to log against the Docker registry
+        password: $DOCKER_REGISTRY_PASSWORD
+        # Specifies whether the given registry is ECR (auto, true or false)
+        ecr: false
+        # Log out from the Docker registry at the end of a job
+        logout: true
+
+    # Push image to the registry
+    - name: Docker push
+      run: docker push $DOCKER_REGISTRY_HOST/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_VERSION
+    
+          
