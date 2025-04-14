@@ -6,18 +6,16 @@ on:
   pull_request:
     branches: [ "master" ]
 
-env:
-  DOCKER_REGISTRY_HOST: $DOCKER_REGISTRY_HOST
-  DOCKER_REGISTRY_PASSWORD: $DOCKER_REGISTRY_PASSWORD
-  DOCKER_REGISTRY_USERNAME: $DOCKER_REGISTRY_USERNAME
-  DOCKER_IMAGE_NAME: wildlens-backend
-  DOCKER_IMAGE_VERSION: latest
-
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
+    environment: Wildlens Environement
+    env:
+      DOCKER_REGISTRY_HOST: ${{ env.DOCKER_REGISTRY_HOST }}
+      DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+      DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+      DOCKER_IMAGE_NAME: wildlens-backend
+      DOCKER_IMAGE_VERSION: latest
     steps:
     # Build the docker image
     - uses: actions/checkout@v4
