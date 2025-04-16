@@ -16,11 +16,12 @@ jobs:
       DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
       DOCKER_IMAGE_NAME: wildlens-backend
       DOCKER_IMAGE_VERSION: latest
+      FINAL_IMAGE_NAME: ${{ env.DOCKER_REGISTRY_HOST }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_IMAGE_VERSION }}
     steps:
     # Build the docker image
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag $DOCKER_REGISTRY_HOST/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_VERSION
+      run: docker build . --file Dockerfile --tag ${{ env.FINAL_IMAGE_NAME }}
 
 
     # Login to the registry
@@ -28,11 +29,11 @@ jobs:
       uses: docker/login-action@v3.4.0
       with:
         # Server address of Docker registry. If not set then will default to Docker Hub
-        registry: $DOCKER_REGISTRY_HOST
+        registry: ${{ env.DOCKER_REGISTRY_HOST }}
         # Username used to log against the Docker registry
-        username: $DOCKER_REGISTRY_USERNAME
+        username: ${{ env.DOCKER_REGISTRY_USERNAME }}
         # Password or personal access token used to log against the Docker registry
-        password: $DOCKER_REGISTRY_PASSWORD
+        password: ${{ env.DOCKER_REGISTRY_PASSWORD }}
         # Specifies whether the given registry is ECR (auto, true or false)
         ecr: false
         # Log out from the Docker registry at the end of a job
@@ -40,6 +41,6 @@ jobs:
 
     # Push image to the registry
     - name: Docker push
-      run: docker push $DOCKER_REGISTRY_HOST/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_VERSION
+      run: docker push ${{ env.FINAL_IMAGE_NAME }}
     
           
