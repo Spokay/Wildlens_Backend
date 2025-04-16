@@ -14,9 +14,7 @@ jobs:
       DOCKER_REGISTRY_HOST: ${{ vars.DOCKER_REGISTRY_HOST }}
       DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
       DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
-      DOCKER_IMAGE_NAME: wildlens-backend
-      DOCKER_IMAGE_VERSION: latest
-      FINAL_IMAGE_NAME: ${{ env.DOCKER_REGISTRY_HOST }}/${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_IMAGE_VERSION }}
+      FINAL_IMAGE_NAME: ${{ vars.DOCKER_REGISTRY_HOST }}/wildlens-backend:latest
     steps:
     # Build the docker image
     - uses: actions/checkout@v4
