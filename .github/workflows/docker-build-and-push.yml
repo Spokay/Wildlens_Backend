@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: Wildlens Environement
     env:
-      DOCKER_REGISTRY_HOST: ${{ env.DOCKER_REGISTRY_HOST }}
+      DOCKER_REGISTRY_HOST: ${{ vars.DOCKER_REGISTRY_HOST }}
       DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
       DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
       DOCKER_IMAGE_NAME: wildlens-backend
