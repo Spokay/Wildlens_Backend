@@ -1,3 +1,5 @@
+# WILDLENS BACKEND
+
 # Application mandatory requirements
 
 1. (Installed separatly) Python 3.12.0
