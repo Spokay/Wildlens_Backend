@@ -14,7 +14,9 @@ from app.dto.species import (
     SpecieClassificationResponse,
     CreateSpecieInfo,
 )
+from app.dto.users import AuthenticatedUser
 from app.mappers.specie_mapper import get_specie_mapper
+from app.services.authentication_service import get_current_user
 from app.services.azure_blob_service import (
     AzureBlobService,
     get_azure_blob_service,
@@ -153,6 +155,20 @@ async def get_identified_species(
 
     return species_identified
 
+@router.get(
+    "/identified/me/all",
+    description="Get the species identified by the current user",
+    response_model=list[SpecieBasicInfoResponse],
+    status_code=status.HTTP_200_OK
+)
+async def get_user_identified_species(
+        current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
+        session: Session = Depends(get_session),
+        specie_mapper = Depends(get_specie_mapper)
+) -> list[SpecieBasicInfoResponse]:
+    species_identified = await get_identified_species_by_user(current_user.user_id, session, specie_mapper)
+
+    return species_identified
 
 @router.post("/create")
 async def create_specier_route(
