@@ -9,6 +9,7 @@ from app.database import get_session
 from app.dto.species import (
     SpecieResponse,
     SpecieBasicInfoResponse,
+    UpdateSpecieInfo,
     UploadInfo,
     SpecieClassificationResponse,
     CreateSpecieInfo,
@@ -23,6 +24,7 @@ from app.services.specie_service import (
     get_specie_by_class_number,
     save_identification,
     get_identified_species_by_user,
+    update_specie,
     upload_blob_from_temp_file,
     save_temporary_file,
     create_specie,
@@ -174,6 +176,7 @@ async def delete_specie_route(
     specie_id: int,
     session: Session = Depends(get_session),
     specie_mapper=Depends(get_specie_mapper),
+    specie_update: UpdateSpecieInfo = Body(...),
 ):
     pass
 
@@ -183,5 +186,13 @@ async def update_specie_route(
     specie_id: int,
     session: Session = Depends(get_session),
     specie_mapper=Depends(get_specie_mapper),
+    specie_update: UpdateSpecieInfo = Body(...),
 ):
-    pass
+    specie = await update_specie(session, specie_mapper, specie_update, specie_id)
+
+    return JSONResponse(
+        {
+            "message": "Species updated successfully",
+            "specie": specie.model_dump(mode="json"),
+        }
+    )
