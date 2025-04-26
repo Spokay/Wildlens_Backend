@@ -23,6 +23,7 @@ from app.services.azure_blob_service import (
 from app.services.specie_service import (
     delete_specie,
     get_specie_by_class_number,
+    list_all_species,
     save_identification,
     get_identified_species_by_user,
     update_specie,
@@ -205,5 +206,20 @@ async def update_specie_route(
         {
             "message": "Species updated successfully",
             "specie": specie.model_dump(mode="json"),
+        }
+    )
+
+
+@router.get("/list/all")
+async def list_all_species_route(
+    session: Session = Depends(get_session),
+    specie_mapper=Depends(get_specie_mapper),
+) -> JSONResponse:
+    species = await list_all_species(session, specie_mapper)
+
+    return JSONResponse(
+        {
+            "message": "Species retrieved successfully",
+            "species": [specie.model_dump(mode="json") for specie in species],
         }
     )

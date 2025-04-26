@@ -213,3 +213,24 @@ async def delete_specie(
     session.delete(specie_to_delete)
     session.commit()
     return response
+
+
+async def list_all_species(
+    session: Session, specie_mapper: SpecieMapper
+) -> list[SpecieBasicInfoResponse]:
+    statement = select(Specie)
+    species = session.exec(statement).all()
+
+    if not species:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No species found",
+        )
+
+    specie_list = []
+    for specie in species:
+        specie_list.append(specie)
+
+    species_response = await specie_mapper.species_to_basic_info_responses(specie_list)
+
+    return species_response
