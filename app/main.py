@@ -14,9 +14,12 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from fastapi import FastAPI, Depends
 from sqlmodel import Session
 
-from app.services.authentication_service import AuthMiddleware, ExceptionHandlerLoggingMiddleware
+from app.services.authentication_service import (
+    AuthMiddleware,
+    ExceptionHandlerLoggingMiddleware,
+)
 from app.database import create_db_and_tables, get_session, database_engine
-from app.routes import users, species
+from app.routes import users, species, families
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
@@ -33,10 +36,7 @@ async def lifespan(app_object: FastAPI):
     #
 
 
-app = FastAPI(
-    root_path=API_PREFIX,
-    lifespan=lifespan
-)
+app = FastAPI(root_path=API_PREFIX, lifespan=lifespan)
 
 Instrumentator().instrument(app).expose(app)
 
@@ -45,6 +45,7 @@ app.add_middleware(ExceptionHandlerLoggingMiddleware)
 
 app.include_router(users.router)
 app.include_router(species.router)
+app.include_router(families.router)
 
 if __name__ == "__main__":
     port = int(os.getenv("APP_PORT", 8002))
