@@ -195,3 +195,21 @@ async def update_specie(
     session.commit()
 
     return await specie_mapper.specie_to_basic_info_response(specie_to_update)
+
+
+async def delete_specie(
+    session: Session, specie_id: int, specie_mapper: SpecieMapper
+) -> SpecieBasicInfoResponse:
+    specie_to_delete = session.get(Specie, specie_id)
+
+    if not specie_to_delete:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Specie with id {specie_id} not found",
+        )
+
+    response = await specie_mapper.specie_to_basic_info_response(specie_to_delete)
+
+    session.delete(specie_to_delete)
+    session.commit()
+    return response
