@@ -154,9 +154,6 @@ async def get_identified_species(
     return species_identified
 
 
-# CRUD
-
-
 @router.post("/create")
 async def create_specier_route(
     specie_to_create: CreateSpecieInfo = Body(...),

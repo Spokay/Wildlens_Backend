@@ -4,15 +4,15 @@ meta {
   seq: 6
 }
 
-post {
-  url: {{BASE_URL}}/species/create
+put {
+  url: {{BASE_URL}}/species/update/7
   body: json
   auth: inherit
 }
 
 body:json {
   {
-    "name": "test4",
+    "name": "test1",
     "latin_name": "test",
     "description": "test",
     "size": "test",
