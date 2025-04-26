@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from sqlmodel import SQLModel
+from typing import Optional
 
 from app.dto.family import FamilyResponse
 from app.dto.habitat import HabitatResponse
@@ -70,3 +71,16 @@ class CreateSpecieInfo(BaseModel):
     footprint_exemple_photo_url: str
     family_id: int
     habitats_ids: list[int]
+
+
+class UpdateSpecieInfo(BaseModel):
+    name: Optional[str] = None
+    latin_name: Optional[str] = None
+    description: Optional[str] = None
+    size: Optional[str] = None
+    region: Optional[str] = None
+    fun_fact: Optional[str] = None
+    specie_exemple_photo_url: Optional[str] = None
+    footprint_exemple_photo_url: Optional[str] = None
+    family_id: Optional[int] = None
+    habitats_ids: Optional[list[int]] = None

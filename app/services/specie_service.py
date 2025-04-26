@@ -7,7 +7,12 @@ from fastapi import HTTPException, UploadFile
 from sqlmodel import Session, select, insert
 from starlette import status
 
-from app.dto.species import CreateSpecieInfo, SpecieBasicInfoResponse, UploadInfo
+from app.dto.species import (
+    CreateSpecieInfo,
+    SpecieBasicInfoResponse,
+    UploadInfo,
+    UpdateSpecieInfo,
+)
 from app.mappers.specie_mapper import SpecieMapper
 from app.models import Family, Specie, Identification, Habitat
 from app.services.azure_blob_service import AzureBlobService, create_file_name
@@ -143,3 +148,50 @@ async def create_specie(
         session.commit()
 
         return await specie_mapper.specie_to_basic_info_response(new_specie)
+
+
+async def update_specie(
+    session: Session, specie_mapper: SpecieMapper, specie: UpdateSpecieInfo, specie_id
+) -> SpecieBasicInfoResponse:
+    specie_to_update = session.get(Specie, specie_id)
+
+    property_mapping = {
+        "footprint_exemple_photo_url": "footprint_exemple_photo",
+        "specie_exemple_photo_url": "specie_exemple_photo",
+    }
+
+    if not specie_to_update:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Specie with id {specie_id} not found",
+        )
+
+    if specie.habitats_ids:
+        specie_to_update.habitats.clear()
+        for habitat_id in specie.habitats_ids:
+            habitat = session.get(Habitat, habitat_id)
+            if habitat is None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Habitat with id {habitat_id} not found",
+                )
+            specie_to_update.habitats.append(habitat)
+
+        del specie.habitats_ids
+
+    for key, value in specie.model_dump(mode="json", exclude_unset=True).items():
+        if hasattr(specie_to_update, key) or key in property_mapping.keys():
+            if key in property_mapping.keys():
+                mapped_key = property_mapping[key]
+                setattr(specie_to_update, mapped_key, value)
+            else:
+                setattr(specie_to_update, key, value)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Specie does not have property {key}",
+            )
+
+    session.commit()
+
+    return await specie_mapper.specie_to_basic_info_response(specie_to_update)

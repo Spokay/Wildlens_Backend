@@ -1,0 +1,39 @@
+meta {
+  name: Update
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{BASE_URL}}/species/create
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "test4",
+    "latin_name": "test",
+    "description": "test",
+    "size": "test",
+    "region": "test",
+    "fun_fact": "test",
+    "specie_exemple_photo_url": "test",
+    "footprint_exemple_photo_url": "test",
+    "family_id": 1,
+    "habitats_ids": [1]
+  }
+}
+
+body:multipart-form {
+  name: test
+  latin_name: test
+  description: test
+  size: test
+  region: test
+  fun_fact: test
+  specie_exemple_photo_url: test
+  specie_exemple_photo_url: test
+  footprint_exemple_photo_url: test
+  family_id: 1
+}
