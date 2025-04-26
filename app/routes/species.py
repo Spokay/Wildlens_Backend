@@ -21,6 +21,7 @@ from app.services.azure_blob_service import (
     add_base_path_to_file_name,
 )
 from app.services.specie_service import (
+    delete_specie,
     get_specie_by_class_number,
     save_identification,
     get_identified_species_by_user,
@@ -176,9 +177,19 @@ async def delete_specie_route(
     specie_id: int,
     session: Session = Depends(get_session),
     specie_mapper=Depends(get_specie_mapper),
-    specie_update: UpdateSpecieInfo = Body(...),
 ):
-    pass
+    specie = await delete_specie(session, specie_id, specie_mapper)
+    if not specie:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Specie with id {specie_id} not found",
+        )
+    return JSONResponse(
+        {
+            "message": "Species deleted successfully",
+            "specie": specie.model_dump(mode="json"),
+        }
+    )
 
 
 @router.put("/update/{specie_id}")
