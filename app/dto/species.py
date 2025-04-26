@@ -9,6 +9,7 @@ class SpeciePrediction(BaseModel):
     class_number: int
     probability: float
 
+
 class SpecieBasicInfoResponse(BaseModel):
     id: int
     name: str
@@ -16,6 +17,7 @@ class SpecieBasicInfoResponse(BaseModel):
     region: str
     family: "FamilyResponse"
     habitats: list["HabitatResponse"]
+
 
 class SpecieResponse(SQLModel):
     id: int
@@ -30,6 +32,7 @@ class SpecieResponse(SQLModel):
     family: "FamilyResponse"
     habitats: list["HabitatResponse"]
 
+
 class SpeciePredictionResponse(SQLModel):
     id: int
     name: str
@@ -41,6 +44,7 @@ class SpeciePredictionResponse(SQLModel):
     family: "FamilyResponse"
     habitats: list["HabitatResponse"]
     probability: float
+
 
 class SpecieClassificationResponse(BaseModel):
     predictions_response: list[SpeciePredictionResponse]
@@ -54,3 +58,15 @@ class UploadInfo(BaseModel):
     image_file_name: str
     tmp_file_path: str
 
+
+class CreateSpecieInfo(BaseModel):
+    name: str
+    latin_name: str
+    description: str
+    size: str
+    region: str
+    fun_fact: str
+    specie_exemple_photo_url: str
+    footprint_exemple_photo_url: str
+    family_id: int
+    habitats_ids: list[int]
