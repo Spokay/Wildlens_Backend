@@ -1,9 +1,10 @@
 from pydantic import BaseModel
 from sqlmodel import SQLModel
-from typing import Optional
+from typing import Optional, Union
 
 from app.dto.family import FamilyResponse
 from app.dto.habitat import HabitatResponse
+from app.models import Identification
 
 
 class SpeciePrediction(BaseModel):
@@ -33,6 +34,9 @@ class SpecieResponse(SQLModel):
     family: "FamilyResponse"
     habitats: list["HabitatResponse"]
 
+class SpecieIdentifiedResponse(SpecieResponse):
+    identifications: list["Identification"]
+    is_identified: Optional[bool] = None
 
 class SpeciePredictionResponse(SQLModel):
     id: int

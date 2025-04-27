@@ -12,7 +12,7 @@ from app.dto.species import (
     UpdateSpecieInfo,
     UploadInfo,
     SpecieClassificationResponse,
-    CreateSpecieInfo,
+    CreateSpecieInfo, SpecieIdentifiedResponse,
 )
 from app.dto.users import AuthenticatedUser
 from app.mappers.specie_mapper import get_specie_mapper
@@ -31,7 +31,7 @@ from app.services.specie_service import (
     update_specie,
     upload_blob_from_temp_file,
     save_temporary_file,
-    create_specie,
+    create_specie, get_identified_specie_by_user, get_all_species_by_user,
 )
 from app.services.wildlens_api_service import (
     WildlensAPIService,
@@ -141,14 +141,14 @@ async def get_specie_information(
 @router.get(
     "/identified/{user_id}",
     description="Get the species identified by a user",
-    response_model=list[SpecieBasicInfoResponse],
+    response_model=list[SpecieIdentifiedResponse],
     status_code=status.HTTP_200_OK,
 )
 async def get_identified_species(
     user_id: int,
     session: Session = Depends(get_session),
     specie_mapper=Depends(get_specie_mapper),
-) -> list[SpecieBasicInfoResponse]:
+) -> list[SpecieIdentifiedResponse]:
     species_identified = await get_identified_species_by_user(
         user_id, session, specie_mapper
     )
@@ -158,17 +158,49 @@ async def get_identified_species(
 @router.get(
     "/identified/me/all",
     description="Get the species identified by the current user",
-    response_model=list[SpecieBasicInfoResponse],
+    response_model=list[SpecieIdentifiedResponse],
     status_code=status.HTTP_200_OK
 )
 async def get_user_identified_species(
         current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
         session: Session = Depends(get_session),
         specie_mapper = Depends(get_specie_mapper)
-) -> list[SpecieBasicInfoResponse]:
+) -> list[SpecieIdentifiedResponse]:
     species_identified = await get_identified_species_by_user(current_user.user_id, session, specie_mapper)
 
     return species_identified
+
+@router.get(
+    "/identified/me/{specie_id}",
+    description="Get a specie identified by the current user",
+    response_model=SpecieIdentifiedResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_user_identified_specie_by_id(
+        specie_id:int,
+        current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
+        session: Session = Depends(get_session),
+        specie_mapper = Depends(get_specie_mapper),
+) -> SpecieIdentifiedResponse:
+    specie_identified = await get_identified_specie_by_user(current_user.user_id, specie_id, session, specie_mapper)
+
+    return specie_identified
+
+@router.get(
+    "/me/all",
+    description="Get all species for a user",
+    response_model=list[SpecieIdentifiedResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def get_user_identified_species(
+        current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
+        session: Session = Depends(get_session),
+        specie_mapper = Depends(get_specie_mapper)
+) -> list[SpecieIdentifiedResponse]:
+    species_identified = await get_all_species_by_user(current_user.user_id, session, specie_mapper)
+
+    return species_identified
+
 
 @router.post("/create")
 async def create_specier_route(
