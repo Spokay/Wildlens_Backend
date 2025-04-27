@@ -4,6 +4,7 @@ import aiofiles
 from typing import Optional
 
 from fastapi import HTTPException, UploadFile
+from numpy.f2py.auxfuncs import throw_error
 from sqlmodel import Session, select, insert
 from starlette import status
 
@@ -11,7 +12,7 @@ from app.dto.species import (
     CreateSpecieInfo,
     SpecieBasicInfoResponse,
     UploadInfo,
-    UpdateSpecieInfo,
+    UpdateSpecieInfo, SpecieIdentifiedResponse,
 )
 from app.mappers.specie_mapper import SpecieMapper
 from app.models import Family, Specie, Identification, Habitat
@@ -87,21 +88,70 @@ async def save_identification(
     return identification
 
 
-async def get_identified_species_by_user(
-    user_id: int, session: Session, specie_mapper: SpecieMapper
-) -> list[SpecieBasicInfoResponse]:
+async def get_identified_specie_by_user(
+        user_id: int, specie_id: int, session: Session, specie_mapper: SpecieMapper
+) -> SpecieIdentifiedResponse:
     statement = (
-        select(Specie).join(Identification).where(Identification.user_id == user_id)
+        select(Specie)
+        .join(Identification)
+        .where(Identification.user_id == user_id)
+        .where(Identification.specie_id == specie_id)
+        .order_by(Identification.date_identified)
     )
 
-    identified_species = session.exec(statement).all()
+    response = session.exec(statement).first()
+    if not response:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Vous n'avez pas identifié cette espèce ou l'espèce n'existe pas"
+        )
 
-    species_response = await specie_mapper.species_to_basic_info_responses(
-        identified_species
+    return await specie_mapper.specie_identified_to_info_response(response)
+
+
+async def get_identified_species_by_user(
+    user_id: int, session: Session, specie_mapper: SpecieMapper
+) -> list[SpecieIdentifiedResponse]:
+    statement = (
+        select(Specie)
+        .join(Identification)
+        .where(Identification.user_id == user_id)
+        .order_by(Identification.date_identified)
+        .group_by(Specie.id)
+    )
+
+    response = session.exec(statement).all()
+    print(response)
+    if not response:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Vous n'avez pas d'espèces identifiées"
+        )
+    species_response = await specie_mapper.species_identified_to_info_responses(
+        response
     )
 
     return species_response
 
+async def get_all_species_by_user(
+    user_id: int, session: Session, specie_mapper: SpecieMapper
+) -> list[SpecieIdentifiedResponse]:
+    statement = (
+        select(Specie)
+    )
+
+    response = session.exec(statement).all()
+    print(response)
+    if not response:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Vous n'avez pas d'espèces identifiées"
+        )
+    species_response = await specie_mapper.species_user_to_info_responses(
+        response, user_id
+    )
+
+    return species_response
 
 async def create_specie(
     session: Session, specie_mapper: SpecieMapper, specie_to_create: CreateSpecieInfo
