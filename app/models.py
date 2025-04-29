@@ -110,7 +110,7 @@ class User(SQLModel, table=True):
     role: "Role" = Relationship(back_populates="users")
     species: list["Specie"] = Relationship(back_populates="users", link_model=Identification)
     badges: list["Badge"] = Relationship(back_populates="users", link_model=UserBadge)
-    profile_picture: str = Field(sa_column=Column(TEXT), nullable=True)
+    profile_picture: str | None = Field(sa_column=Column(TEXT))
 
 class Badge(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
