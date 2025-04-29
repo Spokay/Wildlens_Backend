@@ -95,3 +95,18 @@ async def list_all_families(
     familes_response = await family_mapper.families_to_response(family_list)
 
     return familes_response
+
+
+async def get_family(
+    session: Session, family_id: int, family_mapper: FamilyMapper
+) -> FamilyResponse:
+    statement = select(Family).where(Family.id == family_id)
+    family = session.exec(statement).first()
+
+    if not family:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="family not found",
+        )
+
+    return await family_mapper.family_to_response(family)
