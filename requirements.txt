@@ -1,5 +1,5 @@
 uvicorn~=0.34.0
-fastapi~=0.115.7
+fastapi[standard]~=0.115.7
 starlette~=0.41.3
 python-dotenv~=1.0.1
 azure-storage-blob~=12.24.0
