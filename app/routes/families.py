@@ -11,6 +11,7 @@ from app.services.family_service import (
     delete_family,
     list_all_families,
     update_family,
+    get_family,
 )
 
 
@@ -90,5 +91,21 @@ async def list_all_familys_route(
         {
             "message": "families retrieved successfully",
             "families": [family.model_dump(mode="json") for family in families],
+        }
+    )
+
+
+@router.get("/list/{family_id}")
+async def get_family_route(
+    family_id: int,
+    session: Session = Depends(get_session),
+    family_mapper=Depends(get_family_mapper),
+) -> JSONResponse:
+    family = await get_family(session, family_id, family_mapper)
+
+    return JSONResponse(
+        {
+            "message": "family retrieved successfully",
+            "family": family.model_dump(mode="json"),
         }
     )

@@ -19,7 +19,7 @@ from app.services.authentication_service import (
     ExceptionHandlerLoggingMiddleware,
 )
 from app.database import create_db_and_tables, get_session, database_engine
-from app.routes import users, species, families
+from app.routes import users, species, families, habitats
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
@@ -46,6 +46,7 @@ app.add_middleware(ExceptionHandlerLoggingMiddleware)
 app.include_router(users.router)
 app.include_router(species.router)
 app.include_router(families.router)
+app.include_router(habitats.router)
 
 if __name__ == "__main__":
     port = int(os.getenv("APP_PORT", 8002))
