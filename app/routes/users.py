@@ -69,7 +69,7 @@ async def register_user(
                 detail="User already exists",
             )
 
-        created_user = await create_user(session, form_data.username, form_data.password)
+        created_user = await create_user(session, form_data.username, form_data.email, form_data.password)
 
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = await create_access_token(
@@ -81,10 +81,7 @@ async def register_user(
         )
         return Token(access_token=access_token, token_type="bearer")
     except HTTPException as e:
-        print(e)
         raise e
-    except e:
-        print(e)
 
 @router.get(
     "/me/badges",
