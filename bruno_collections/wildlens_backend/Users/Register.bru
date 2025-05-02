@@ -6,8 +6,16 @@ meta {
 
 post {
   url: {{BASE_URL}}{{API_PREFIX}}/users/register
-  body: formUrlEncoded
+  body: json
   auth: none
+}
+
+body:json {
+  {
+    "username":"testuser",
+    "password" :"test12435",
+    "email" : "testuser@test.fr"
+  }
 }
 
 body:form-urlencoded {
