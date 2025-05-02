@@ -14,3 +14,15 @@ class CreateFamilyInfo(BaseModel):
 
 class UpdateFamilyInfo(BaseModel):
     name: Optional[str] = None
+
+class CreateFamilyResponse(BaseModel):
+    message: str
+    family: FamilyResponse
+
+class UpdateFamilyResponse(BaseModel):
+    message: str
+    family: FamilyResponse
+
+class DeleteFamilyResponse(BaseModel):
+    message: str
+    family: FamilyResponse

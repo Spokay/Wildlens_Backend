@@ -5,12 +5,11 @@ from fastapi import APIRouter, Depends, HTTPException, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 from starlette import status
-from starlette.responses import JSONResponse
 
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.database import get_session
 from app.dto.badge import BadgeResponse
-from app.dto.users import AuthenticatedUser, RegisterRequest, UpdateUserInfo
+from app.dto.users import AuthenticatedUser, RegisterRequest, UpdateUserInfo, DeleteUserResponse, UpdateUserResponse
 from app.mappers.user_mapper import get_user_mapper
 from app.services.authentication_service import authenticate_user, get_current_user, role_required
 from app.services.badge_service import get_user_badges
@@ -52,6 +51,7 @@ async def login_for_access_token(
     )
     return Token(access_token=access_token, token_type="bearer")
 
+
 @router.post(
     "/register",
     description="Register a new user",
@@ -90,9 +90,11 @@ async def register_user(
     except HTTPException as e:
         raise e
 
+
 @router.put(
     "/me",
-    description="User updates its informations",
+    description="User updates their informations",
+    response_model=UpdateUserResponse,
     status_code=status.HTTP_200_OK
 )
 async def update_user_route(
@@ -100,7 +102,7 @@ async def update_user_route(
     session: Session = Depends(get_session),
     user_mapper=Depends(get_user_mapper),
     user_update: UpdateUserInfo = Body(...),
-):
+)-> UpdateUserResponse:
     if user_update.password and not await is_password_valid(user_update.password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -120,25 +122,21 @@ async def update_user_route(
         current_user.user_id,
     )
 
-    return JSONResponse(
-        {
-            "message": "user updated successfully",
-            "user": user.model_dump(mode="json"),
-        }
-    )
+    return UpdateUserResponse(message="user updated successfully", user=user)
 
 
 @role_required("ADMIN")
 @router.delete(
     "/delete/{user_id}",
     description="Delete the user",
+    response_model=DeleteUserResponse,
     status_code=status.HTTP_200_OK
 )
 async def delete_user_route(
         user_id:int,
         session: Session = Depends(get_session),
         user_mapper=Depends(get_user_mapper)
-):
+)-> DeleteUserResponse:
     user = await delete_user(
         session,
         user_id,
@@ -151,12 +149,8 @@ async def delete_user_route(
             detail=f"user with id {user_id} not found",
         )
 
-    return JSONResponse(
-        {
-            "message": "user deleted successfully",
-            "user": user.model_dump(mode="json"),
-        }
-    )
+    return DeleteUserResponse(message="user deleted successfully", user=user)
+
 
 @router.get(
     "/me/badges",

@@ -12,11 +12,11 @@ from app.dto.species import (
     UpdateSpecieInfo,
     UploadInfo,
     SpecieClassificationResponse,
-    CreateSpecieInfo, SpecieIdentifiedResponse,
+    CreateSpecieInfo, SpecieIdentifiedResponse, CreateSpecieResponse, UpdateSpecieResponse, DeleteSpecieResponse
 )
 from app.dto.users import AuthenticatedUser
 from app.mappers.specie_mapper import get_specie_mapper
-from app.services.authentication_service import get_current_user
+from app.services.authentication_service import get_current_user, role_required
 from app.services.azure_blob_service import (
     AzureBlobService,
     get_azure_blob_service,
@@ -102,13 +102,14 @@ async def predict_image_class(
 @router.post(
     "/upload_identification",
     description="Upload an identification to the blob storage",
+    response_model=dict[str, str],
     status_code=status.HTTP_200_OK,
 )
 async def upload_identification(
     upload_info: UploadInfo,
     azure_blob_service: Annotated[AzureBlobService, Depends(get_azure_blob_service)],
     session: Session = Depends(get_session),
-) -> JSONResponse:
+) -> dict[str, str]:
     await upload_blob_from_temp_file(upload_info, azure_blob_service)
 
     file_storage_key = await add_base_path_to_file_name(upload_info.image_file_name)
@@ -117,7 +118,7 @@ async def upload_identification(
         session, upload_info.user_id, upload_info.specie_id, file_storage_key
     )
 
-    return JSONResponse({"message": "Identification enregistrée avec succès"})
+    return {"message": "Identification enregistrée avec succès"}
 
 
 @router.get(
@@ -155,6 +156,7 @@ async def get_identified_species(
 
     return species_identified
 
+
 @router.get(
     "/identified/me/all",
     description="Get the species identified by the current user",
@@ -169,6 +171,7 @@ async def get_user_identified_species(
     species_identified = await get_identified_species_by_user(current_user.user_id, session, specie_mapper)
 
     return species_identified
+
 
 @router.get(
     "/identified/me/{specie_id}",
@@ -186,6 +189,7 @@ async def get_user_identified_specie_by_id(
 
     return specie_identified
 
+
 @router.get(
     "/me/all",
     description="Get all species for a user",
@@ -202,69 +206,73 @@ async def get_user_identified_species(
     return species_identified
 
 
-@router.post("/create")
+@role_required("ADMIN")
+@router.post(
+    "/create",
+    description="Create a specie",
+    response_model=CreateSpecieResponse,
+    status_code=status.HTTP_201_CREATED
+)
 async def create_specier_route(
     specie_to_create: CreateSpecieInfo = Body(...),
     session: Session = Depends(get_session),
     specie_mapper=Depends(get_specie_mapper),
-):
+) -> CreateSpecieResponse:
     specie = await create_specie(session, specie_mapper, specie_to_create)
-    return JSONResponse(
-        {
-            "message": "Species created successfully",
-            "specie": specie.model_dump(mode="json"),
-        },
-        status_code=status.HTTP_201_CREATED,
-    )
+
+    return CreateSpecieResponse(message="Species created successfully", specie=specie)
 
 
-@router.delete("/delete/{specie_id}")
+@role_required("ADMIN")
+@router.delete(
+    "/delete/{specie_id}",
+    description="Delete a specie",
+    response_model=DeleteSpecieResponse,
+    status_code=status.HTTP_200_OK
+)
 async def delete_specie_route(
     specie_id: int,
     session: Session = Depends(get_session),
     specie_mapper=Depends(get_specie_mapper),
-):
+)-> DeleteSpecieResponse:
     specie = await delete_specie(session, specie_id, specie_mapper)
     if not specie:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Specie with id {specie_id} not found",
         )
-    return JSONResponse(
-        {
-            "message": "Species deleted successfully",
-            "specie": specie.model_dump(mode="json"),
-        }
-    )
+
+    return DeleteSpecieResponse(message="Species deleted successfully", specie=specie)
 
 
-@router.put("/update/{specie_id}")
+@role_required("ADMIN")
+@router.put(
+    "/update/{specie_id}",
+    description="Update a specie",
+    response_model=UpdateSpecieResponse,
+    status_code=status.HTTP_200_OK
+)
 async def update_specie_route(
     specie_id: int,
     session: Session = Depends(get_session),
     specie_mapper=Depends(get_specie_mapper),
     specie_update: UpdateSpecieInfo = Body(...),
-):
+)-> UpdateSpecieResponse:
     specie = await update_specie(session, specie_mapper, specie_update, specie_id)
 
-    return JSONResponse(
-        {
-            "message": "Species updated successfully",
-            "specie": specie.model_dump(mode="json"),
-        }
-    )
+    return UpdateSpecieResponse(message="Species updated successfully", specie=specie)
 
 
-@router.get("/list/all")
+@router.get(
+    "/list/all",
+    description="Get all species",
+    response_model=list[SpecieBasicInfoResponse],
+    status_code=status.HTTP_200_OK
+)
 async def list_all_species_route(
     session: Session = Depends(get_session),
     specie_mapper=Depends(get_specie_mapper),
-) -> JSONResponse:
+) -> list[SpecieBasicInfoResponse]:
     species = await list_all_species(session, specie_mapper)
 
-    return JSONResponse(
-        {
-            "message": "Species retrieved successfully",
-            "species": [specie.model_dump(mode="json") for specie in species],
-        }
-    )
+    return species

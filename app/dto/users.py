@@ -21,3 +21,11 @@ class UpdateUserInfo(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
     password: Optional[str] = None
+
+class UpdateUserResponse(BaseModel):
+    message: str
+    user: UserResponse
+
+class DeleteUserResponse(BaseModel):
+    message: str
+    user: UserResponse
