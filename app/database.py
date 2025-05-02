@@ -149,7 +149,7 @@ def create_db_and_tables(engine):
     )
 
     password_hashed = get_password_hash("admin123")
-    statement = select(User).where(User.username == "admin")
+    statement = select(User).where(User.email == "admin@admin.fr")
     admin1 = session.exec(statement).first()
     if not admin1:
         admin1 = User(
@@ -159,6 +159,7 @@ def create_db_and_tables(engine):
             role_id=1
         )
         session.add(admin1)
+        session.commit()
         session.refresh(admin1)
 
     session.add(family1)

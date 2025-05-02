@@ -46,11 +46,13 @@ async def update_user(
     if not user_to_update:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"family with id {user_id} not found",
+            detail=f"user with id {user_id} not found",
         )
 
     for key, value in user.model_dump(mode="json", exclude_unset=True).items():
         if hasattr(user_to_update, key):
+            if key == "password":
+                value = get_password_hash(value)
             setattr(user_to_update, key, value)
         else:
             raise HTTPException(
