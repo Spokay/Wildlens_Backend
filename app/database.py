@@ -1,10 +1,11 @@
 import os
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlmodel import SQLModel, Session
 
 from app.models import Role, Family, Habitat, Specie, User, Badge, UserBadge, SpecieHabitat, Identification, \
     BadgeCriteria
+from app.services.user_service import get_password_hash
 
 host = os.getenv('DB_HOST', 'localhost')
 port = os.getenv('DB_PORT', 3306)
@@ -146,6 +147,20 @@ def create_db_and_tables(engine):
         footprint_exemple_photo="https://example.com/chat_pattes.jpg",
         family_id=1
     )
+
+    password_hashed = get_password_hash("admin123")
+    statement = select(User).where(User.email == "admin@admin.fr")
+    admin1 = session.exec(statement).first()
+    if not admin1:
+        admin1 = User(
+            username="admin",
+            email="admin@admin.fr",
+            password=password_hashed,
+            role_id=1
+        )
+        session.add(admin1)
+        session.commit()
+        session.refresh(admin1)
 
     session.add(family1)
     session.add(specie1)
