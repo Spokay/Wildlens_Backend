@@ -36,18 +36,10 @@ from app.services.specie_service import (
 from app.services.wildlens_api_service import (
     WildlensAPIService,
     get_wildlens_api_service,
+    assert_content_type_is_valid,
 )
 
 router = APIRouter(prefix="/species", tags=["species"])
-
-
-async def assert_content_type_is_valid(content_type: str):
-    if content_type not in ["image/jpeg", "image/png"]:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid file type. Please upload a JPEG or PNG image.",
-        )
-
 
 @router.post(
     "/predict",
