@@ -24,9 +24,20 @@ async def user_exists(session: Session, username: str) -> bool:
     user : Optional[User] = session.exec(select(User).where(User.email == username or User.username == username)).first()
     return user is not None
 
+async def get_user_by_id(session: Session, user_id: int) -> User:
+    user: Optional[User] = session.get(User, user_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"user with id {user_id} not found",
+        )
+    
+    return user
+
 
 async def create_user(session: Session, username: str, email: str, password: str) -> User:
-    hashed_password = get_password_hash(password)
+    hashed_password: str = get_password_hash(password)
     user = User(username=username, email=email, password=hashed_password, role_id=2)
     session.add(user)
     session.commit()
@@ -41,13 +52,7 @@ async def get_user_by_username(session: Session, username: str) -> Optional[User
 async def update_user(
         session: Session, user_mapper: UserMapper, user: UpdateUserInfo, user_id
 ) -> UserResponse:
-    user_to_update = session.get(User, user_id)
-
-    if not user_to_update:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"user with id {user_id} not found",
-        )
+    user_to_update: User = await get_user_by_id(session, user_id)
 
     for key, value in user.model_dump(mode="json", exclude_unset=True).items():
         if hasattr(user_to_update, key):
@@ -67,20 +72,10 @@ async def update_user(
 async def delete_user(
         session: Session, user_id:int, user_mapper: UserMapper
 )-> UserResponse:
-    user_to_delete = session.get(User, user_id)
-
-    if not user_to_delete:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"user with {user_id} not found",
-        )
+    user_to_delete = await get_user_by_id(session, user_id)
 
     response = await user_mapper.user_to_response(user_to_delete)
 
     session.delete(user_to_delete)
     session.commit()
     return response
-
-
-async def get_user_by_email(session: Session, email: str) -> Optional[User]:
-    return session.exec(select(User).where(User.email == email)).first()
