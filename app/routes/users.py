@@ -59,24 +59,24 @@ async def login_for_access_token(
     status_code=status.HTTP_201_CREATED
 )
 async def register_user(
-    form_data: RegisterRequest = Body(...),
+    register_request: RegisterRequest,
     session: Session = Depends(get_session)
 ) -> Token:
     try:
 
-        if not await is_password_valid(form_data.password):
+        if not await is_password_valid(register_request.password):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Password is not valid",
             )
 
-        if await user_exists(session, form_data.username):
+        if await user_exists(session, register_request.username):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="User already exists",
             )
 
-        created_user = await create_user(session, form_data.username, form_data.email, form_data.password)
+        created_user = await create_user(session, register_request.username, register_request.email, register_request.password)
 
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = await create_access_token(
