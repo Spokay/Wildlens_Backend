@@ -20,3 +20,4 @@ class RegisterRequest(BaseModel):
 class UpdateUserInfo(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
+    password: Optional[str] = None
