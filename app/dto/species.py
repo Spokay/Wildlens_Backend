@@ -88,3 +88,15 @@ class UpdateSpecieInfo(BaseModel):
     footprint_exemple_photo_url: Optional[str] = None
     family_id: Optional[int] = None
     habitats_ids: Optional[list[int]] = None
+
+class CreateSpecieResponse(BaseModel):
+    message: str
+    specie: SpecieBasicInfoResponse | SpecieResponse
+
+class UpdateSpecieResponse(BaseModel):
+    message: str
+    specie: SpecieBasicInfoResponse | SpecieResponse
+
+class DeleteSpecieResponse(BaseModel):
+    message: str
+    specie:SpecieBasicInfoResponse | SpecieResponse

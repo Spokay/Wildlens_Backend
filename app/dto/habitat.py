@@ -16,3 +16,15 @@ class CreateHabitatInfo(BaseModel):
 class UpdateHabitatInfo(BaseModel):
     name: str
     description: str
+
+class CreateHabitatResponse(BaseModel):
+    message: str
+    habitat: HabitatResponse
+
+class UpdateHabitatResponse(BaseModel):
+    message: str
+    habitat: HabitatResponse
+
+class DeleteHabitatResponse(BaseModel):
+    message: str
+    habitat: HabitatResponse
