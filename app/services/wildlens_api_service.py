@@ -2,7 +2,7 @@ from fastapi import UploadFile, HTTPException
 from httpx import Headers, Client, AsyncClient
 
 from app.config import WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD, NUMBER_OF_CLASSES, \
-    WILDLENS_PREDICTION_API_BASE_URL, WILDLENS_PREDICTION_API_KEY
+    WILDLENS_PREDICTION_API_BASE_URL, WILDLENS_PREDICTION_API_KEY, PREDICTION_AUHTORIZED_MIME_TYPES
 from app.dto.species import SpeciePrediction
 
 BINARY_PREDICTION_URL = f"{WILDLENS_PREDICTION_API_BASE_URL}/predictions/binary"
@@ -15,6 +15,14 @@ def get_client():
         headers=headers,
         base_url=WILDLENS_PREDICTION_API_BASE_URL,
     )
+
+
+async def assert_content_type_is_valid(content_type: str):
+    if content_type not in PREDICTION_AUHTORIZED_MIME_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid file type. Please upload a JPEG or PNG image.",
+        )
 
 
 class WildlensAPIService:

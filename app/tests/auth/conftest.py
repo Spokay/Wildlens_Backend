@@ -62,7 +62,7 @@ def valid_token():
 def authenticated_user():
     return AuthenticatedUser(
         user_id=1,
-        email="testuser@test.fr",
+        username="testuser@test.fr",
         role_name="USER"
     )
 
@@ -70,7 +70,7 @@ def authenticated_user():
 def authenticated_admin():
     return AuthenticatedUser(
         user_id=2,
-        email="testadminuser@test.fr",
+        username="testadminuser@test.fr",
         role_name="ADMIN"
     )
 
