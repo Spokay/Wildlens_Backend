@@ -10,8 +10,6 @@ jobs:
     environment: Wildlens Environement
     env:
       DOCKER_REGISTRY_HOST: ${{ vars.DOCKER_REGISTRY_HOST }}
-      DOCKER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
-      DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
       FINAL_IMAGE_NAME: ${{ vars.DOCKER_REGISTRY_HOST }}/${{ vars.IMAGE_NAME }}:latest
     steps:
     # Build the docker image
@@ -27,9 +25,9 @@ jobs:
         # Server address of Docker registry. If not set then will default to Docker Hub
         registry: ${{ env.DOCKER_REGISTRY_HOST }}
         # Username used to log against the Docker registry
-        username: ${{ env.DOCKER_REGISTRY_USERNAME }}
+        username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
         # Password or personal access token used to log against the Docker registry
-        password: ${{ env.DOCKER_REGISTRY_PASSWORD }}
+        password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
         # Specifies whether the given registry is ECR (auto, true or false)
         ecr: false
         # Log out from the Docker registry at the end of a job
