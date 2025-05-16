@@ -1,67 +1,92 @@
 pipeline {
-  agent {
-    docker {
-      image 'python:3.11.0'
-      args '-v /tmp:/tmp'
-    }
-
-  }
-  stages {
-    stage('Install dependencies') {
-      steps {
-        script {
-          sh 'python -m venv ${WORKSPACE}/venv'
+    agent any
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
         }
-
-        script {
-          sh '. ${WORKSPACE}/venv/bin/activate && pip install -r requirements.txt'
+        
+        stage('Setup Virtual Environment') {
+            steps {
+                sh '''
+                    # Supprimer l'environnement virtuel s'il existe
+                    rm -rf venv || true
+                    
+                    # Créer un nouvel environnement virtuel
+                    python3 -m venv venv
+                    
+                    # Activer l'environnement et installer les dépendances
+                    . venv/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                    
+                    # S'assurer que pytest et pytest-cov sont installés
+                    pip install pytest pytest-cov
+                '''
+            }
         }
-
-      }
-    }
-
-    stage('Run tests') {
-      steps {
-        script {
-          sh 'pytest --cov=app --cov-report=xml --junitxml=test-results.xml'
+        
+        stage('Lint') {
+            steps {
+                sh '''
+                    . venv/bin/activate
+                    pip install flake8
+                    flake8 app --count --select=E9,F63,F7,F82 --show-source --statistics
+                '''
+            }
         }
-
-        post() {
-          always() {
-            junit 'test-results.xml'
-            cobertura(coberturaReportFile: 'coverage.xml')
-          }
-
+        
+        stage('Test') {
+            steps {
+                sh '''
+                    . venv/bin/activate
+                    
+                    # Vérifier que pytest-cov est installé
+                    pip list | grep pytest-cov
+                    
+                    # Exécuter les tests avec couverture
+                    python -m pytest tests/ --cov=app --cov-report=xml --junitxml=test-results.xml
+                '''
+            }
+            post {
+                always {
+                    junit 'test-results.xml'
+                    cobertura coberturaReportFile: 'coverage.xml'
+                }
+            }
         }
-
-      }
-    }
-
-    stage('Build') {
-      steps {
-        script {
-          sh 'echo "Building the application..."'
+        
+        stage('Build') {
+            steps {
+                sh '''
+                    echo "Building application..."
+                '''
+            }
         }
-
-      }
+        
+        stage('Deploy') {
+            when {
+                branch 'master'
+            }
+            steps {
+                sh '''
+                    echo "Deploying to production environment..."
+                '''
+            }
+        }
     }
-
-  }
-  environment {
-    PYTHONPATH = "${WORKSPACE}"
-  }
-  post {
-    success {
-      echo 'Pipeline executed successfully!'
+    
+    post {
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline execution failed!'
+        }
+        always {
+            echo 'Cleaning up...'
+        }
     }
-
-    failure {
-      echo 'Pipeline execution failed!'
-    }
-
-    always {
-      sh 'echo "Cleaning up..."'
-    }
-
-  }
 }
