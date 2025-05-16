@@ -23,7 +23,7 @@ pipeline {
     stage('Run tests') {
       steps {
         script {
-          sh 'pytest --cov=app --cov-report=xml --junitxml=test-results.xml'
+          sh 'python3 -m pytest --cov=app --cov-report=xml --junitxml=test-results.xml'
         }
 
         post() {
