@@ -10,11 +10,18 @@ pipeline {
     stage('Install dependencies') {
       steps {
         script {
-          sh 'python -m venv ${WORKSPACE}/venv'
-        }
+          sh '''
+# Création et activation de l'environnement virtuel
+python -m venv ${WORKSPACE}/venv
+. ${WORKSPACE}/venv/bin/activate
 
-        script {
-          sh '. ${WORKSPACE}/venv/bin/activate && pip install -r requirements.txt'
+# Installation des dépendances
+pip install --upgrade pip
+pip install -r requirements.txt
+
+# Exécution des tests
+python -m pytest --cov=app --cov-report=xml --junitxml=test-results.xml
+'''
         }
 
       }
