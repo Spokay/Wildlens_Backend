@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Body
 from sqlmodel import Session
 from starlette import status
-from starlette.responses import JSONResponse
 
 from app.database import get_session
 from app.mappers.habitat_mapper import get_habitat_mapper
@@ -13,7 +12,7 @@ from app.dto.habitat import (
     UpdateHabitatResponse,
     HabitatResponse,
 )
-from app.services.authentication_service import role_required
+from app.services.authentication_service import admin_required, role_required
 from app.services.habitats_service import (
     create_habitat,
     delete_habitat,
@@ -26,7 +25,6 @@ from app.services.habitats_service import (
 router = APIRouter(prefix="/habitats", tags=["habtitats"])
 
 
-@role_required("ADMIN")
 @router.post(
     "/create",
     description="Create a habitat",
@@ -37,6 +35,7 @@ async def create_habitat_route(
     habitat_to_create: CreateHabitatInfo = Body(...),
     session: Session = Depends(get_session),
     habitat_mapper=Depends(get_habitat_mapper),
+    is_authorized=Depends(admin_required),
 ) -> CreateHabitatResponse:
     habitat = await create_habitat(session, habitat_mapper, habitat_to_create)
     return CreateHabitatResponse(
@@ -44,7 +43,6 @@ async def create_habitat_route(
     )
 
 
-@role_required("ADMIN")
 @router.delete(
     "/delete/{habitat_id}",
     description="Delete a habitat",
@@ -55,6 +53,7 @@ async def delete_habitat_route(
     habitat_id: int,
     session: Session = Depends(get_session),
     habitat_mapper=Depends(get_habitat_mapper),
+    is_authorized=Depends(admin_required),
 ) -> DeleteHabitatResponse:
     habitat = await delete_habitat(
         session,
@@ -72,7 +71,6 @@ async def delete_habitat_route(
     )
 
 
-@role_required("ADMIN")
 @router.put(
     "/update/{habitat_id}",
     description="Update a habitat",
@@ -84,6 +82,7 @@ async def update_habitat_route(
     session: Session = Depends(get_session),
     habitat_mapper=Depends(get_habitat_mapper),
     habitat_update: UpdateHabitatInfo = Body(...),
+    is_authorized=Depends(admin_required),
 ) -> UpdateHabitatResponse:
     habitat = await update_habitat(
         session,

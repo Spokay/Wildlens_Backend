@@ -46,17 +46,16 @@ async def create_family_route(
     return CreateFamilyResponse(message="family created successfully", family=family)
 
 
-@role_required("ADMIN")
 @router.delete(
     "/delete/{family_id}",
     description="Delete a family",
     response_model=DeleteFamilyResponse,
-    status_code=status.HTTP_200_OK,
 )
 async def delete_family_route(
     family_id: int,
     session: Session = Depends(get_session),
     family_mapper=Depends(get_family_mapper),
+    is_authorized: bool = Depends(admin_required),
 ) -> DeleteFamilyResponse:
     family = await delete_family(
         session,
@@ -72,7 +71,6 @@ async def delete_family_route(
     return DeleteFamilyResponse(message="family deleted successfully", family=family)
 
 
-@role_required("ADMIN")
 @router.put(
     "/update/{family_id}",
     description="Update a family",
@@ -84,6 +82,7 @@ async def update_family_route(
     session: Session = Depends(get_session),
     family_mapper=Depends(get_family_mapper),
     family_update: UpdateFamilyInfo = Body(...),
+    is_authorized: bool = Depends(admin_required),
 ) -> UpdateFamilyResponse:
     family = await update_family(
         session,
@@ -124,4 +123,3 @@ async def get_family_route(
     family = await get_family(session, family_id, family_mapper)
 
     return family
-

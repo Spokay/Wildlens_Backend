@@ -18,9 +18,9 @@ from app.dto.users import (
 )
 from app.mappers.user_mapper import get_user_mapper
 from app.services.authentication_service import (
+    admin_required,
     authenticate_user,
     get_current_user,
-    role_required,
 )
 from app.services.badge_service import get_user_badges
 from app.services.token_service import Token, create_access_token
@@ -138,7 +138,6 @@ async def update_user_route(
     return UpdateUserResponse(message="user updated successfully", user=user)
 
 
-@role_required("ADMIN")
 @router.delete(
     "/delete/{user_id}",
     description="Delete the user",
@@ -149,6 +148,7 @@ async def delete_user_route(
     user_id: int,
     session: Session = Depends(get_session),
     user_mapper=Depends(get_user_mapper),
+    is_authorized: bool = Depends(admin_required),
 ) -> DeleteUserResponse:
     user = await delete_user(session, user_id, user_mapper)
 
