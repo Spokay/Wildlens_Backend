@@ -11,7 +11,7 @@ from sqlmodel import SQLModel, Field, Relationship, Session, select, insert
 class Family(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str = Field(sa_column=Column(String(255), index=True))
-    species: list["Specie"] = Relationship(back_populates="family")
+    species: list["Specie"] = Relationship(back_populates="family", cascade_delete=True)
 
 
 class SpecieHabitat(SQLModel, table=True):
@@ -38,14 +38,40 @@ class Specie(SQLModel, table=True):
     footprint_exemple_photo: str = Field(sa_column=Column(TEXT))
     family_id: int = Field(foreign_key="family.id")
     family: "Family" = Relationship(back_populates="species")
-    habitats: list["Habitat"] = Relationship(back_populates="species", link_model=SpecieHabitat)
-    users: list["User"] = Relationship(back_populates="species", link_model=Identification)
+    habitats: list["Habitat"] = Relationship(
+        back_populates="species", link_model=SpecieHabitat
+    )
+    users: list["User"] = Relationship(
+        back_populates="species", link_model=Identification
+    )
+
     @property
     def identifications(self):
         from app.database import database_engine
+
         statement = (
             select(Identification)
             .where(Identification.specie_id == self.id)
+            .order_by(Identification.date_identified)
+        )
+
+        with Session(database_engine) as session:
+            try:
+                response = session.exec(statement).all()
+                if response:
+                    return response
+                else:
+                    return []
+            finally:
+                session.close()
+
+    def identifications_for_user(self, user_id):
+        from app.database import database_engine
+
+        statement = (
+            select(Identification)
+            .where(Identification.specie_id == self.id)
+            .where(Identification.user_id == user_id)
             .order_by(Identification.date_identified)
         )
 
@@ -82,7 +108,9 @@ class Habitat(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str = Field(sa_column=Column(String(255), index=True))
     description: str = Field(sa_column=Column(TEXT))
-    species: list["Specie"] = Relationship(back_populates="habitats", link_model=SpecieHabitat)
+    species: list["Specie"] = Relationship(
+        back_populates="habitats", link_model=SpecieHabitat
+    )
     habitat_photo: str = Field(sa_column=Column(TEXT))
 
 
@@ -108,9 +136,12 @@ class User(SQLModel, table=True):
     updated_at: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
     role_id: int = Field(foreign_key="role.id")
     role: "Role" = Relationship(back_populates="users")
-    species: list["Specie"] = Relationship(back_populates="users", link_model=Identification)
+    species: list["Specie"] = Relationship(
+        back_populates="users", link_model=Identification
+    )
     badges: list["Badge"] = Relationship(back_populates="users", link_model=UserBadge)
     profile_picture: str | None = Field(sa_column=Column(TEXT))
+
 
 class Badge(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
@@ -118,11 +149,10 @@ class Badge(SQLModel, table=True):
     description: str = Field(sa_column=Column(TEXT))
     users: list["User"] = Relationship(back_populates="badges", link_model=UserBadge)
 
+
 class BadgeCriteria(SQLModel, table=True):
     badge_id: int = Field(foreign_key="badge.id", primary_key=True)
     criteria: Dict = Field(default_factory=dict, sa_column=Column(JSON))
-
-    # Needed for Column(JSON)
     model_config = ConfigDict(
         frozen=False,
     )

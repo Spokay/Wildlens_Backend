@@ -125,23 +125,20 @@ async def update_user_route(
     return UpdateUserResponse(message="user updated successfully", user=user)
 
 
-@role_required("ADMIN")
+
 @router.delete(
     "/delete/{user_id}",
     description="Delete the user",
     response_model=DeleteUserResponse,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
 )
 async def delete_user_route(
-        user_id:int,
-        session: Session = Depends(get_session),
-        user_mapper=Depends(get_user_mapper)
-)-> DeleteUserResponse:
-    user = await delete_user(
-        session,
-        user_id,
-        user_mapper
-    )
+    user_id: int,
+    session: Session = Depends(get_session),
+    user_mapper=Depends(get_user_mapper),
+    is_authorized: bool = Depends(admin_required),
+) -> DeleteUserResponse:
+    user = await delete_user(session, user_id, user_mapper)
 
     if not user:
         raise HTTPException(
@@ -156,11 +153,11 @@ async def delete_user_route(
     "/me/badges",
     description="Get the badges of the current user",
     response_model=list[BadgeResponse],
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
 )
 async def get_current_user_badges(
-        current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
-        session: Session = Depends(get_session)
+    current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
+    session: Session = Depends(get_session),
 ) -> list[BadgeResponse]:
     badge_responses = await get_user_badges(current_user.user_id, session)
     return badge_responses

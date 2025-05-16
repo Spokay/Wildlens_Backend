@@ -12,11 +12,18 @@ from app.dto.species import (
     UpdateSpecieInfo,
     UploadInfo,
     SpecieClassificationResponse,
-    CreateSpecieInfo, SpecieIdentifiedResponse, CreateSpecieResponse, UpdateSpecieResponse, DeleteSpecieResponse
+    CreateSpecieInfo,
+    SpecieIdentifiedResponse,
+    CreateSpecieResponse,
+    UpdateSpecieResponse,
+    DeleteSpecieResponse,
 )
 from app.dto.users import AuthenticatedUser
 from app.mappers.specie_mapper import get_specie_mapper
-from app.services.authentication_service import get_current_user, role_required
+from app.services.authentication_service import (
+    get_current_user,
+    admin_required,
+)
 from app.services.azure_blob_service import (
     AzureBlobService,
     get_azure_blob_service,
@@ -31,7 +38,9 @@ from app.services.specie_service import (
     update_specie,
     upload_blob_from_temp_file,
     save_temporary_file,
-    create_specie, get_identified_specie_by_user, get_all_species_by_user,
+    create_specie,
+    get_identified_specie_by_user,
+    get_all_species_by_user,
 )
 from app.services.wildlens_api_service import (
     WildlensAPIService,
@@ -40,6 +49,7 @@ from app.services.wildlens_api_service import (
 )
 
 router = APIRouter(prefix="/species", tags=["species"])
+
 
 @router.post(
     "/predict",
@@ -55,6 +65,12 @@ async def predict_image_class(
     ),
     specie_mapper=Depends(get_specie_mapper),
 ) -> SpecieClassificationResponse | JSONResponse:
+    if not image or image.content_type is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="L'image est vide ou n'a pas de type de contenu",
+        )
+
     await assert_content_type_is_valid(image.content_type)
 
     # 1. check if the image is a footprint
@@ -153,14 +169,16 @@ async def get_identified_species(
     "/identified/me/all",
     description="Get the species identified by the current user",
     response_model=list[SpecieIdentifiedResponse],
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
 )
-async def get_user_identified_species(
-        current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
-        session: Session = Depends(get_session),
-        specie_mapper = Depends(get_specie_mapper)
+async def get_user_identified_species_route(
+    current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
+    session: Session = Depends(get_session),
+    specie_mapper=Depends(get_specie_mapper),
 ) -> list[SpecieIdentifiedResponse]:
-    species_identified = await get_identified_species_by_user(current_user.user_id, session, specie_mapper)
+    species_identified = await get_identified_species_by_user(
+        current_user.user_id, session, specie_mapper
+    )
 
     return species_identified
 
@@ -172,12 +190,14 @@ async def get_user_identified_species(
     status_code=status.HTTP_200_OK,
 )
 async def get_user_identified_specie_by_id(
-        specie_id:int,
-        current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
-        session: Session = Depends(get_session),
-        specie_mapper = Depends(get_specie_mapper),
+    specie_id: int,
+    current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
+    session: Session = Depends(get_session),
+    specie_mapper=Depends(get_specie_mapper),
 ) -> SpecieIdentifiedResponse:
-    specie_identified = await get_identified_specie_by_user(current_user.user_id, specie_id, session, specie_mapper)
+    specie_identified = await get_identified_specie_by_user(
+        current_user.user_id, specie_id, session, specie_mapper
+    )
 
     return specie_identified
 
@@ -189,44 +209,46 @@ async def get_user_identified_specie_by_id(
     status_code=status.HTTP_200_OK,
 )
 async def get_user_identified_species(
-        current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
-        session: Session = Depends(get_session),
-        specie_mapper = Depends(get_specie_mapper)
+    current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
+    session: Session = Depends(get_session),
+    specie_mapper=Depends(get_specie_mapper),
 ) -> list[SpecieIdentifiedResponse]:
-    species_identified = await get_all_species_by_user(current_user.user_id, session, specie_mapper)
+    species_identified = await get_all_species_by_user(
+        current_user.user_id, session, specie_mapper
+    )
 
     return species_identified
 
 
-@role_required("ADMIN")
 @router.post(
     "/create",
     description="Create a specie",
     response_model=CreateSpecieResponse,
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_specier_route(
     specie_to_create: CreateSpecieInfo = Body(...),
     session: Session = Depends(get_session),
     specie_mapper=Depends(get_specie_mapper),
+    is_authorized: bool = Depends(admin_required),
 ) -> CreateSpecieResponse:
     specie = await create_specie(session, specie_mapper, specie_to_create)
 
     return CreateSpecieResponse(message="Species created successfully", specie=specie)
 
 
-@role_required("ADMIN")
 @router.delete(
     "/delete/{specie_id}",
     description="Delete a specie",
     response_model=DeleteSpecieResponse,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
 )
 async def delete_specie_route(
     specie_id: int,
     session: Session = Depends(get_session),
+    is_authorized=Depends(admin_required),
     specie_mapper=Depends(get_specie_mapper),
-)-> DeleteSpecieResponse:
+) -> DeleteSpecieResponse:
     specie = await delete_specie(session, specie_id, specie_mapper)
     if not specie:
         raise HTTPException(
@@ -237,19 +259,19 @@ async def delete_specie_route(
     return DeleteSpecieResponse(message="Species deleted successfully", specie=specie)
 
 
-@role_required("ADMIN")
 @router.put(
     "/update/{specie_id}",
     description="Update a specie",
     response_model=UpdateSpecieResponse,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
 )
 async def update_specie_route(
     specie_id: int,
     session: Session = Depends(get_session),
     specie_mapper=Depends(get_specie_mapper),
+    is_authorized=Depends(admin_required),
     specie_update: UpdateSpecieInfo = Body(...),
-)-> UpdateSpecieResponse:
+) -> UpdateSpecieResponse:
     specie = await update_specie(session, specie_mapper, specie_update, specie_id)
 
     return UpdateSpecieResponse(message="Species updated successfully", specie=specie)
@@ -259,7 +281,7 @@ async def update_specie_route(
     "/list/all",
     description="Get all species",
     response_model=list[SpecieBasicInfoResponse],
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
 )
 async def list_all_species_route(
     session: Session = Depends(get_session),
