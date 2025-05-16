@@ -30,7 +30,7 @@ pipeline {
             sh '''
                 . venv/bin/activate
                 
-                python -m pytest tests/
+                python -m pytest
             '''
         }
       }
