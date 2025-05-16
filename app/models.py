@@ -121,8 +121,6 @@ class Badge(SQLModel, table=True):
 class BadgeCriteria(SQLModel, table=True):
     badge_id: int = Field(foreign_key="badge.id", primary_key=True)
     criteria: Dict = Field(default_factory=dict, sa_column=Column(JSON))
-
-    # Needed for Column(JSON)
     model_config = ConfigDict(
         frozen=False,
     )

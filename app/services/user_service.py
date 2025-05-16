@@ -1,5 +1,6 @@
 from typing import Optional
 
+
 from passlib.context import CryptContext
 from sqlmodel import Session, select
 from fastapi import HTTPException, status
@@ -10,19 +11,26 @@ from app.models import User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 async def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
+
 
 # not async, would cause issues in database.py when creating the admin pwd
 def get_password_hash(password):
     return pwd_context.hash(password)
 
+
 async def is_password_valid(password: str) -> bool:
     return len(password) > 8
 
+
 async def user_exists(session: Session, username: str) -> bool:
-    user: Optional[User] = session.exec(select(User).where(User.email == username or User.username == username)).first()
+    user: Optional[User] = session.exec(
+        select(User).where(User.email == username or User.username == username)
+    ).first()
     return user is not None
+
 
 async def get_user_by_id(session: Session, user_id: int) -> User:
     user: Optional[User] = session.get(User, user_id)
@@ -36,7 +44,9 @@ async def get_user_by_id(session: Session, user_id: int) -> User:
     return user
 
 
-async def create_user(session: Session, username: str, email: str, password: str) -> User:
+async def create_user(
+    session: Session, username: str, email: str, password: str
+) -> User:
     hashed_password: str = get_password_hash(password)
     user = User(username=username, email=email, password=hashed_password, role_id=2)
     session.add(user)
@@ -45,7 +55,9 @@ async def create_user(session: Session, username: str, email: str, password: str
     return user
 
 
-async def update_user_fields(session: Session, new_user_info: UpdateUserInfo, user_to_update: User) -> User:
+async def update_user_fields(
+    session: Session, new_user_info: UpdateUserInfo, user_to_update: User
+) -> User:
     for key, value in new_user_info.model_dump(mode="json", exclude_unset=True).items():
         if hasattr(user_to_update, key):
             if key == "password":
@@ -64,10 +76,13 @@ async def update_user_fields(session: Session, new_user_info: UpdateUserInfo, us
 
 
 async def get_user_by_username(session: Session, username: str) -> Optional[User]:
-    return session.exec(select(User).where(User.email == username or User.username == username)).first()
+    return session.exec(
+        select(User).where(User.email == username or User.username == username)
+    ).first()
+
 
 async def update_user(
-        session: Session, user_mapper: UserMapper, new_user_info: UpdateUserInfo, user_id
+    session: Session, user_mapper: UserMapper, new_user_info: UpdateUserInfo, user_id
 ) -> UserResponse:
     user_to_update: User = await get_user_by_id(session, user_id)
 
@@ -76,7 +91,7 @@ async def update_user(
 
 
 async def delete_user(
-        session: Session, user_id: int, user_mapper: UserMapper
+    session: Session, user_id: int, user_mapper: UserMapper
 ) -> UserResponse:
     user_to_delete = await get_user_by_id(session, user_id)
 

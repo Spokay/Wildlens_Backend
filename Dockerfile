@@ -19,3 +19,4 @@ RUN ["pip", "install", "-r", "requirements.txt"]
 ENV FALLBACK_PORT=8002
 
 ENTRYPOINT ["/app/entrypoint.sh"]
+

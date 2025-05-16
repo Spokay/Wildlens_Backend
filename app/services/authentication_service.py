@@ -1,5 +1,6 @@
 import traceback
 from functools import wraps
+import pytest
 from typing import Optional
 
 from fastapi import HTTPException
@@ -19,13 +20,15 @@ from app.services.user_service import get_user_by_username, verify_password
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/token")
 
-async def authenticate_user(session : Session, username: str, password: str):
-    user : Optional[User] = await get_user_by_username(session, username)
+
+async def authenticate_user(session: Session, username: str, password: str):
+    user: Optional[User] = await get_user_by_username(session, username)
     if not user:
         return False
     if not await verify_password(password, user.password):
         return False
     return user
+
 
 async def get_current_user(request: Request) -> AuthenticatedUser:
     user_id = request.state.user_id
@@ -33,7 +36,9 @@ async def get_current_user(request: Request) -> AuthenticatedUser:
     role_name = request.state.role_name
 
     if not user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+        )
 
     return AuthenticatedUser(user_id=user_id, username=username, role_name=role_name)
 
@@ -45,10 +50,10 @@ async def extract_token_from_request(request: Request) -> str:
         token = auth_header.replace("Bearer ", "")
     return token
 
+
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-
-        normalized_path = request.url.path.rstrip('/')
+        normalized_path = request.url.path.rstrip("/")
 
         if normalized_path in EXCLUDED_PATHS:
             return await call_next(request)
@@ -57,12 +62,11 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         if not token:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Not authenticated"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
             )
 
         try:
-            payload : dict = await decode_access_token(token)
+            payload: dict = await decode_access_token(token)
             username = payload.get("sub")
             user_id = payload.get("user_id")
             role_name = payload.get("role")
@@ -72,10 +76,13 @@ class AuthMiddleware(BaseHTTPMiddleware):
             request.state.role_name = role_name
 
         except InvalidTokenError:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+            )
 
         response = await call_next(request)
         return response
+
 
 class ExceptionHandlerLoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
@@ -83,29 +90,42 @@ class ExceptionHandlerLoggingMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
             return response
         except HTTPException as http_exc:
-            logger.info(f"HTTP error: {http_exc.detail} (status: {http_exc.status_code})")
+            logger.info(
+                f"HTTP error: {http_exc.detail} (status: {http_exc.status_code})"
+            )
             return JSONResponse(
-                status_code=http_exc.status_code,
-                content={"detail": http_exc.detail}
+                status_code=http_exc.status_code, content={"detail": http_exc.detail}
             )
         except Exception as e:
             logger.error(f"Unhandled error: {e}")
             logger.debug(traceback.format_exc())
             return JSONResponse(
-                status_code=500,
-                content={"detail": "An unexpected error occurred."}
+                status_code=500, content={"detail": "An unexpected error occurred."}
             )
+
 
 def role_required(role: str):
     def decorator(func):
         @wraps(func)
-        async def wrapper(request: Request, *args, **kwargs):
+        async def wrapper(*args, **kwargs):
+            print(kwargs)
             user_role = request.state.role_name
             if user_role != role:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="You do not have the required permissions"
+                    detail="You do not have the required permissions",
                 )
             return await func(request, *args, **kwargs)
+
         return wrapper
+
     return decorator
+
+
+def admin_required(request: Request):
+    if request.state.role_name != "ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have the required permissions",
+        )
+    return request.state.role_name
