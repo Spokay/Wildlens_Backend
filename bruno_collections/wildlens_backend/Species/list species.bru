@@ -1,0 +1,24 @@
+meta {
+  name: list species
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{BASE_URL}}/species/list/all
+  body: none
+  auth: inherit
+}
+
+body:multipart-form {
+  name: test
+  latin_name: test
+  description: test
+  size: test
+  region: test
+  fun_fact: test
+  specie_exemple_photo_url: test
+  specie_exemple_photo_url: test
+  footprint_exemple_photo_url: test
+  family_id: 1
+}

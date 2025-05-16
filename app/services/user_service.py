@@ -2,8 +2,10 @@ from typing import Optional
 
 from passlib.context import CryptContext
 from sqlmodel import Session, select
+from fastapi import HTTPException, status
 
-from app.config import email_validation_regex
+from app.dto.users import UpdateUserInfo, UserResponse
+from app.mappers.user_mapper import UserMapper
 from app.models import User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -11,27 +13,75 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 async def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
-async def get_password_hash(password):
+# not async, would cause issues in database.py when creating the admin pwd
+def get_password_hash(password):
     return pwd_context.hash(password)
 
-
-async def is_email_valid(email: str) -> bool:
-    return email_validation_regex.fullmatch(email)
-
 async def is_password_valid(password: str) -> bool:
-    return len(password) > 0
+    return len(password) > 8
 
-async def user_exists(session: Session, email: str) -> bool:
-    user : Optional[User] = session.exec(select(User).where(User.email == email)).first()
+async def user_exists(session: Session, username: str) -> bool:
+    user: Optional[User] = session.exec(select(User).where(User.email == username or User.username == username)).first()
     return user is not None
 
-async def create_user(session: Session, email: str, password: str) -> User:
-    hashed_password = await get_password_hash(password)
-    user = User(email=email, password=hashed_password, role_id=2)
+async def get_user_by_id(session: Session, user_id: int) -> User:
+    user: Optional[User] = session.get(User, user_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"user with id {user_id} not found",
+        )
+
+    return user
+
+
+async def create_user(session: Session, username: str, email: str, password: str) -> User:
+    hashed_password: str = get_password_hash(password)
+    user = User(username=username, email=email, password=hashed_password, role_id=2)
     session.add(user)
     session.commit()
     session.refresh(user)
     return user
 
-async def get_user_by_email(session: Session, email: str) -> Optional[User]:
-    return session.exec(select(User).where(User.email == email)).first()
+
+async def update_user_fields(session: Session, new_user_info: UpdateUserInfo, user_to_update: User) -> User:
+    for key, value in new_user_info.model_dump(mode="json", exclude_unset=True).items():
+        if hasattr(user_to_update, key):
+            if key == "password":
+                value = get_password_hash(value)
+            setattr(user_to_update, key, value)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"user does not have property {key}",
+            )
+
+    session.add(user_to_update)
+    session.commit()
+    session.refresh(user_to_update)
+    return user_to_update
+
+
+async def get_user_by_username(session: Session, username: str) -> Optional[User]:
+    return session.exec(select(User).where(User.email == username or User.username == username)).first()
+
+async def update_user(
+        session: Session, user_mapper: UserMapper, new_user_info: UpdateUserInfo, user_id
+) -> UserResponse:
+    user_to_update: User = await get_user_by_id(session, user_id)
+
+    updated_user = await update_user_fields(session, new_user_info, user_to_update)
+    return await user_mapper.user_to_response(updated_user)
+
+
+async def delete_user(
+        session: Session, user_id: int, user_mapper: UserMapper
+) -> UserResponse:
+    user_to_delete = await get_user_by_id(session, user_id)
+
+    response = await user_mapper.user_to_response(user_to_delete)
+
+    session.delete(user_to_delete)
+    session.commit()
+    return response

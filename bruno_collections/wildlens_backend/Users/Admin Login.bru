@@ -1,16 +1,16 @@
 meta {
-  name: Login
+  name: Admin Login
   type: http
-  seq: 1
+  seq: 6
 }
 
 post {
   url: {{BASE_URL}}{{API_PREFIX}}/users/token
   body: formUrlEncoded
-  auth: none
+  auth: inherit
 }
 
 body:form-urlencoded {
-  username: testuser@test.fr
-  password: test123
+  username: admin
+  password: admin123
 }

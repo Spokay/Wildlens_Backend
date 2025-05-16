@@ -1,0 +1,11 @@
+meta {
+  name: All species by current user
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{BASE_URL}}{{API_PREFIX}}/species/me/all
+  body: none
+  auth: inherit
+}

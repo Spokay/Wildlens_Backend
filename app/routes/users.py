@@ -1,7 +1,7 @@
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 from starlette import status
@@ -9,11 +9,12 @@ from starlette import status
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.database import get_session
 from app.dto.badge import BadgeResponse
-from app.dto.users import AuthenticatedUser
-from app.services.authentication_service import authenticate_user, get_current_user
+from app.dto.users import AuthenticatedUser, RegisterRequest, UpdateUserInfo, DeleteUserResponse, UpdateUserResponse
+from app.mappers.user_mapper import get_user_mapper
+from app.services.authentication_service import authenticate_user, get_current_user, role_required
 from app.services.badge_service import get_user_badges
 from app.services.token_service import Token, create_access_token
-from app.services.user_service import is_email_valid, is_password_valid, create_user, user_exists
+from app.services.user_service import is_password_valid, create_user, user_exists, update_user, delete_user
 
 router = APIRouter(
     prefix="/users",
@@ -31,6 +32,7 @@ async def login_for_access_token(
     session: Session = Depends(get_session)
 ) -> Token:
 
+
     user = await authenticate_user(session, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -42,12 +44,13 @@ async def login_for_access_token(
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await create_access_token(
         data={
-            "sub": user.email,
+            "sub": user.username,
             "user_id": user.id,
             "role": user.role.name
         }, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
+
 
 @router.post(
     "/register",
@@ -56,32 +59,98 @@ async def login_for_access_token(
     status_code=status.HTTP_201_CREATED
 )
 async def register_user(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    register_request: RegisterRequest,
     session: Session = Depends(get_session)
 ) -> Token:
-    if not await is_email_valid(form_data.username) or not await is_password_valid(form_data.password):
+    try:
+
+        if not await is_password_valid(register_request.password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Password is not valid",
+            )
+
+        if await user_exists(session, register_request.username):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="User already exists",
+            )
+
+        created_user = await create_user(session, register_request.username, register_request.email, register_request.password)
+
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = await create_access_token(
+            data={
+                "sub": created_user.email,
+                "user_id": created_user.id,
+                "role": created_user.role.name
+            }, expires_delta=access_token_expires
+        )
+        return Token(access_token=access_token, token_type="bearer")
+    except HTTPException as e:
+        raise e
+
+
+@router.put(
+    "/me",
+    description="User updates their informations",
+    response_model=UpdateUserResponse,
+    status_code=status.HTTP_200_OK
+)
+async def update_user_route(
+    current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
+    session: Session = Depends(get_session),
+    user_mapper=Depends(get_user_mapper),
+    user_update: UpdateUserInfo = Body(...),
+)-> UpdateUserResponse:
+    if user_update.password and not await is_password_valid(user_update.password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username and password are not valid",
+            detail="Password is not valid",
         )
 
-    if await user_exists(session, form_data.username):
+    if await user_exists(session, user_update.username):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="User already exists",
         )
 
-    created_user = await create_user(session, form_data.username, form_data.password)
-
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = await create_access_token(
-        data={
-            "sub": created_user.email,
-            "user_id": created_user.id,
-            "role": created_user.role.name
-        }, expires_delta=access_token_expires
+    user = await update_user(
+        session,
+        user_mapper,
+        user_update,
+        current_user.user_id,
     )
-    return Token(access_token=access_token, token_type="bearer")
+
+    return UpdateUserResponse(message="user updated successfully", user=user)
+
+
+@role_required("ADMIN")
+@router.delete(
+    "/delete/{user_id}",
+    description="Delete the user",
+    response_model=DeleteUserResponse,
+    status_code=status.HTTP_200_OK
+)
+async def delete_user_route(
+        user_id:int,
+        session: Session = Depends(get_session),
+        user_mapper=Depends(get_user_mapper)
+)-> DeleteUserResponse:
+    user = await delete_user(
+        session,
+        user_id,
+        user_mapper
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"user with id {user_id} not found",
+        )
+
+    return DeleteUserResponse(message="user deleted successfully", user=user)
+
 
 @router.get(
     "/me/badges",

@@ -3,7 +3,9 @@ from typing import Dict
 
 from pydantic import ConfigDict
 from sqlalchemy import String, Column, JSON, TEXT
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, Session, select, insert
+
+
 
 
 class Family(SQLModel, table=True):
@@ -38,20 +40,56 @@ class Specie(SQLModel, table=True):
     family: "Family" = Relationship(back_populates="species")
     habitats: list["Habitat"] = Relationship(back_populates="species", link_model=SpecieHabitat)
     users: list["User"] = Relationship(back_populates="species", link_model=Identification)
+    @property
+    def identifications(self):
+        from app.database import database_engine
+        statement = (
+            select(Identification)
+            .where(Identification.specie_id == self.id)
+            .order_by(Identification.date_identified)
+        )
 
+        with Session(database_engine) as session:
+            try:
+                response = session.exec(statement).all()
+                if response:
+                    return response
+                else:
+                    return []
+            finally:
+                session.close()
+
+    def identifications_for_user(self, user_id):
+        from app.database import database_engine
+        statement = (
+            select(Identification)
+            .where(Identification.specie_id == self.id)
+            .where(Identification.user_id == user_id)
+            .order_by(Identification.date_identified)
+        )
+
+        with Session(database_engine) as session:
+            try:
+                response = session.exec(statement).all()
+                if response:
+                    return response
+                else:
+                    return []
+            finally:
+                session.close()
 
 class Habitat(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str = Field(sa_column=Column(String(255), index=True))
     description: str = Field(sa_column=Column(TEXT))
     species: list["Specie"] = Relationship(back_populates="habitats", link_model=SpecieHabitat)
+    habitat_photo: str = Field(sa_column=Column(TEXT))
 
 
 class Role(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str = Field(sa_column=Column(String(255), index=True))
     users: list["User"] = Relationship(back_populates="role")
-
 
 
 class UserBadge(SQLModel, table=True):
@@ -62,7 +100,8 @@ class UserBadge(SQLModel, table=True):
 
 class User(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    email: str = Field(sa_column=Column(String(255), index=True))
+    username: str = Field(sa_column=Column(String(255), index=True, unique=True))
+    email: str = Field(sa_column=Column(String(255), index=True, unique=True))
     password: str = Field(sa_column=Column(TEXT))
     disabled: bool = Field(default=False)
     created_at: dt.datetime = Field(default=dt.datetime.now(dt.UTC))
@@ -71,8 +110,7 @@ class User(SQLModel, table=True):
     role: "Role" = Relationship(back_populates="users")
     species: list["Specie"] = Relationship(back_populates="users", link_model=Identification)
     badges: list["Badge"] = Relationship(back_populates="users", link_model=UserBadge)
-
-
+    profile_picture: str | None = Field(sa_column=Column(TEXT))
 
 class Badge(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
