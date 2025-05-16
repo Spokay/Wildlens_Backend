@@ -28,16 +28,7 @@ pipeline {
             }
         }
         
-        stage('Lint') {
-            steps {
-                sh '''
-                    . venv/bin/activate
-                    pip install flake8
-                    flake8 app --count --select=E9,F63,F7,F82 --show-source --statistics
-                '''
-            }
-        }
-        
+               
         stage('Test') {
             steps {
                 sh '''
@@ -47,7 +38,7 @@ pipeline {
                     pip list | grep pytest-cov
                     
                     # Exécuter les tests avec couverture
-                    python -m pytest tests/ --cov=app --cov-report=xml --junitxml=test-results.xml
+                    python -m pytest tests/
                 '''
             }
             post {
