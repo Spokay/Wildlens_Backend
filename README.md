@@ -9,6 +9,11 @@
 pip install -r requirements.txt
 ```
 
+# Run Backend
+```bash
+fastapi dev ./app/main.py --port 8001 --host 0.0.0.0
+```
+
 # Minimal .env file necessary to launch the backend
 ```env
 AZURE_STORAGE_ACCOUNT_NAME=
