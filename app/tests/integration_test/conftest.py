@@ -83,6 +83,7 @@ def get_token(client, test_session):
             },
         )
 
+
         if response.status_code != 200:
             raise Exception(
                 f"Failed to get token: {response.status_code} - {response.text}"

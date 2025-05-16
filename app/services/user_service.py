@@ -45,7 +45,7 @@ async def get_user_by_id(session: Session, user_id: int) -> User:
 
 
 async def create_user(
-    session: Session, username: str, email: str, password: str
+        session: Session, username: str, email: str, password: str
 ) -> User:
     hashed_password: str = get_password_hash(password)
     user = User(username=username, email=email, password=hashed_password, role_id=2)
@@ -56,7 +56,7 @@ async def create_user(
 
 
 async def update_user_fields(
-    session: Session, new_user_info: UpdateUserInfo, user_to_update: User
+        session: Session, new_user_info: UpdateUserInfo, user_to_update: User
 ) -> User:
     for key, value in new_user_info.model_dump(mode="json", exclude_unset=True).items():
         if hasattr(user_to_update, key):
@@ -82,7 +82,7 @@ async def get_user_by_username(session: Session, username: str) -> Optional[User
 
 
 async def update_user(
-    session: Session, user_mapper: UserMapper, new_user_info: UpdateUserInfo, user_id
+        session: Session, user_mapper: UserMapper, new_user_info: UpdateUserInfo, user_id
 ) -> UserResponse:
     user_to_update: User = await get_user_by_id(session, user_id)
 
@@ -91,7 +91,7 @@ async def update_user(
 
 
 async def delete_user(
-    session: Session, user_id: int, user_mapper: UserMapper
+        session: Session, user_id: int, user_mapper: UserMapper
 ) -> UserResponse:
     user_to_delete = await get_user_by_id(session, user_id)
 

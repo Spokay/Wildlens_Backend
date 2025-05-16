@@ -25,6 +25,7 @@ async def authenticate_user(session: Session, username: str, password: str):
     user: Optional[User] = await get_user_by_username(session, username)
     if not user:
         return False
+
     if not await verify_password(password, user.password):
         return False
     return user
@@ -99,9 +100,11 @@ class ExceptionHandlerLoggingMiddleware(BaseHTTPMiddleware):
         except Exception as e:
             logger.error(f"Unhandled error: {e}")
             logger.debug(traceback.format_exc())
-            return JSONResponse(
-                status_code=500, content={"detail": "An unexpected error occurred."}
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Internal server error {e}"
             )
+
 
 def admin_required(request: Request):
     if request.state.role_name != "ADMIN":

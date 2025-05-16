@@ -13,7 +13,7 @@ from app.dto.habitat import (
     UpdateHabitatResponse,
     HabitatResponse,
 )
-from app.services.authentication_service import admin_required, role_required
+from app.services.authentication_service import admin_required
 from app.services.habitats_service import (
     create_habitat,
     delete_habitat,
