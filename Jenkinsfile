@@ -10,7 +10,11 @@ pipeline {
     stage('Install dependencies') {
       steps {
         script {
-          sh 'echo ${WORKSPACE}'
+          sh 'python -m venv ${WORKSPACE}/venv'
+        }
+
+        script {
+          sh '. ${WORKSPACE}/venv/bin/activate && pip install -r requirements.txt'
         }
 
       }
