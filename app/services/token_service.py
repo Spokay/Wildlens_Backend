@@ -28,7 +28,6 @@ class TokenData(BaseModel):
 async def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
 
     to_encode = data.copy()
-    to_encode["user_id"] = str(to_encode["user_id"])
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
