@@ -58,8 +58,9 @@ class AzureBlobService:
             await self.ensure_container_exists()
 
             file_name = await add_base_path_to_file_name(file_name)
+            unique_file_name = f"{uuid.uuid4()}-{file_name}"
 
-            await self.container_client.upload_blob(name=file_name, data=file, overwrite=False)
+            await self.container_client.upload_blob(name=unique_file_name, data=file, overwrite=False)
 
         except Exception as ex:
             raise HTTPException(status_code=500, detail=f"File upload failed: {ex}")
