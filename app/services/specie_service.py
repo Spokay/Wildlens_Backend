@@ -1,7 +1,7 @@
 import os
 import tempfile
 import aiofiles
-from typing import Optional
+from typing import Optional, Tuple
 
 from fastapi import HTTPException, UploadFile
 from numpy.f2py.auxfuncs import throw_error
@@ -30,7 +30,7 @@ async def get_specie_by_class_number(class_number: int, session: Session) -> Spe
     return specie
 
 
-async def save_temporary_file(image: UploadFile) -> (str, str):
+async def save_temporary_file(image: UploadFile) -> Tuple[str, str]:
     try:
         image.file.seek(0)
         # Create a temporary directory (if needed) and save the file there
