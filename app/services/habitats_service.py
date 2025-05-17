@@ -26,7 +26,7 @@ async def create_habitat(
         )
     else:
         new_habitat = Habitat(
-            name=habitat_to_create.name, description=habitat_to_create.description
+            name=habitat_to_create.name, habitat_photo=habitat_to_create.habitat_photo
         )
 
         session.add(new_habitat)

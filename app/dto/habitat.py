@@ -5,17 +5,17 @@ from pydantic import BaseModel
 class HabitatResponse(SQLModel):
     id: int
     name: str
-    description: str | None
+    habitat_photo: str | None
 
 
 class CreateHabitatInfo(BaseModel):
     name: str
-    description: str
+    habitat_photo: str
 
 
 class UpdateHabitatInfo(BaseModel):
     name: str
-    description: str
+    habitat_photo: str
 
 class CreateHabitatResponse(BaseModel):
     message: str

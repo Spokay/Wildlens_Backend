@@ -107,7 +107,6 @@ class Specie(SQLModel, table=True):
 class Habitat(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str = Field(sa_column=Column(String(255), index=True))
-    description: str = Field(sa_column=Column(TEXT))
     species: list["Specie"] = Relationship(
         back_populates="habitats", link_model=SpecieHabitat
     )

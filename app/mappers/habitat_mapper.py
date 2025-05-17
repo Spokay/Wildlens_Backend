@@ -7,7 +7,7 @@ from app.models import Habitat
 class HabitatMapper:
     async def habitat_to_response(self, habitat: Habitat) -> HabitatResponse:
         return HabitatResponse(
-            id=habitat.id, name=habitat.name, description=habitat.description
+            id=habitat.id, name=habitat.name, habitat_photo=habitat.habitat_photo
         )
 
     async def habitat_list_to_response(
