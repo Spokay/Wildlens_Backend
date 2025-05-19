@@ -6,6 +6,8 @@ class UserResponse(SQLModel):
     id: int
     username: str
     email: str
+    profile_picture : str
+    created_at : str
 
 class AuthenticatedUser(BaseModel):
     user_id: int
@@ -21,6 +23,7 @@ class UpdateUserInfo(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
     password: Optional[str] = None
+    profile_picture : Optional[str] = None
 
 class UpdateUserResponse(BaseModel):
     message: str
