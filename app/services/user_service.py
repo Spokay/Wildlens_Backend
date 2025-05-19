@@ -3,7 +3,7 @@ from typing import Optional
 
 from passlib.context import CryptContext
 from sqlmodel import Session, select
-from fastapi import HTTPException, status, Request
+from fastapi import HTTPException, status
 
 from app.dto.users import UpdateUserInfo, UserResponse, AuthenticatedUser
 from app.mappers.user_mapper import UserMapper
