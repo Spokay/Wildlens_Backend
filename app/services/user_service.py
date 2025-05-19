@@ -91,7 +91,7 @@ async def get_current_user_info(
     response: User = session.exec(statement).first()
     if not response:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Erreur lors de la récupération des informations de l'utilisateur."
         )
 
