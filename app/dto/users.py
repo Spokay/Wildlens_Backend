@@ -8,8 +8,8 @@ class UserResponse(SQLModel):
     # id: int
     username: str
     email: str
-    profile_picture : Optional[str] = None
-    created_at : dt.datetime
+    profile_picture: Optional[str] = None
+    created_at: dt.datetime
 
 class AuthenticatedUser(BaseModel):
     user_id: int
