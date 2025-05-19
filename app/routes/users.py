@@ -15,6 +15,7 @@ from app.dto.users import (
     UpdateUserInfo,
     DeleteUserResponse,
     UpdateUserResponse,
+    UserResponse,
 )
 from app.mappers.user_mapper import get_user_mapper
 from app.services.authentication_service import (
@@ -30,6 +31,7 @@ from app.services.user_service import (
     user_exists,
     update_user,
     delete_user,
+    get_current_user_info,
 )
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -139,6 +141,24 @@ async def update_user_route(
     )
 
     return UpdateUserResponse(message="user updated successfully", user=user)
+
+
+@router.get(
+    "/me",
+    description="User fetches their informations",
+    response_model=UserResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_user_route(
+    current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
+    session: Session = Depends(get_session),
+    user_mapper=Depends(get_user_mapper),
+) -> UserResponse:
+    user = await get_current_user_info(
+        session, current_user, user_mapper
+    )
+
+    return user
 
 
 @router.delete(

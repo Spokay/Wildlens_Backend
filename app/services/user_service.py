@@ -5,7 +5,7 @@ from passlib.context import CryptContext
 from sqlmodel import Session, select
 from fastapi import HTTPException, status
 
-from app.dto.users import UpdateUserInfo, UserResponse
+from app.dto.users import UpdateUserInfo, UserResponse, AuthenticatedUser
 from app.mappers.user_mapper import UserMapper
 from app.models import User
 
@@ -79,6 +79,23 @@ async def get_user_by_username(session: Session, username: str) -> Optional[User
     return session.exec(
         select(User).where(User.email == username or User.username == username)
     ).first()
+
+async def get_current_user_info(
+        session: Session, current_user: AuthenticatedUser, user_mapper: UserMapper
+) -> UserResponse:
+    statement = (
+        select(User)
+        .where(current_user.user_id == User.id)
+    )
+
+    response: User = session.exec(statement).first()
+    if not response:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Erreur lors de la récupération des informations de l'utilisateur."
+        )
+
+    return await user_mapper.user_to_response(response)
 
 
 async def update_user(
