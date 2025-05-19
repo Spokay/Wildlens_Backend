@@ -1,13 +1,15 @@
 from pydantic import BaseModel
 from typing import Optional
 from sqlmodel import SQLModel
+import datetime as dt
 
 class UserResponse(SQLModel):
-    id: int
+    # do we ever use it? not very secure bro!!! ahahaha my function works hugo!!! ratio!!!!
+    # id: int
     username: str
     email: str
-    profile_picture : str
-    created_at : str
+    profile_picture : Optional[str] = None
+    created_at : dt.datetime
 
 class AuthenticatedUser(BaseModel):
     user_id: int

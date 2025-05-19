@@ -83,9 +83,10 @@ async def get_user_by_username(session: Session, username: str) -> Optional[User
 async def get_current_user_info(
         session: Session, current_user: AuthenticatedUser, user_mapper: UserMapper
 ) -> UserResponse:
+    print(current_user)
     statement = (
         select(User)
-        .where(current_user.id == User.id)
+        .where(current_user.user_id == User.id)
     )
 
     response: User = session.exec(statement).first()
