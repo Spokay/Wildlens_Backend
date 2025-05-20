@@ -72,12 +72,17 @@ def client(test_session):
 
 @pytest.fixture
 def get_token(client, test_session):
+    import sys
     def _get_token(username="user"):
+        # Vérifier si l'utilisateur existe
         user = test_session.exec(select(User).where(User.username == username)).first()
-
-        if not user:
-            raise Exception(f"User {username} not found")
-
+        
+        if user is None:
+            print(f"User '{username}' not found in database!", file=sys.stderr)
+            raise ValueError(f"Test user '{username}' does not exist in test database")
+        
+        print(f"Attempting login with username: {user.username}", file=sys.stderr)
+        
         response = client.post(
             "api/users/token",
             data={
@@ -86,6 +91,7 @@ def get_token(client, test_session):
             },
         )
 
+        print(f"Token response: {response.status_code} - {response.text}", file=sys.stderr)
 
         if response.status_code != 200:
             raise Exception(
@@ -93,6 +99,9 @@ def get_token(client, test_session):
             )
 
         token_data = response.json()
+        if "access_token" not in token_data:
+            raise KeyError(f"'access_token' not found in response: {token_data}")
+            
         return token_data["access_token"]
 
     return _get_token
