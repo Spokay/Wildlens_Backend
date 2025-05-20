@@ -72,6 +72,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
             user_id = payload.get("user_id")
             role_name = payload.get("role")
 
+            username = str(username)
+            user_id = int(user_id)
+            role_name = str(role_name)
+
             request.state.user_id = user_id
             request.state.username = username
             request.state.role_name = role_name
