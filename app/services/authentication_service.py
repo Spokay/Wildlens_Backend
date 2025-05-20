@@ -98,7 +98,7 @@ class ExceptionHandlerLoggingMiddleware(BaseHTTPMiddleware):
                 status_code=http_exc.status_code, content={"detail": http_exc.detail}
             )
         except Exception as e:
-            logger.error(f"Unhandled error: {e}")
+            logger.error(f"Unhandled error: {str(e)}")
             logger.debug(traceback.format_exc())
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
