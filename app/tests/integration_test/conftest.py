@@ -75,6 +75,9 @@ def get_token(client, test_session):
     def _get_token(username="user"):
         user = test_session.exec(select(User).where(User.username == username)).first()
 
+        if not user:
+            raise Exception(f"User {username} not found")
+
         response = client.post(
             "api/users/token",
             data={
