@@ -87,6 +87,13 @@ class AuthMiddleware(BaseHTTPMiddleware):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
             )
+        except Exception as e:
+            logger.error(f"Unhandled error: {str(e)}")
+            logger.debug(traceback.format_exc())
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Internal server error {str(e)}"
+            )
 
         response = await call_next(request)
         return response
