@@ -14,9 +14,10 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
-      SECRET_KEY: "une_clé_secrète_pour_tests_ci_uniquement"
-      JWT_ALGORITHM: "HS256"
-      JWT_EXPIRATION: "30"
+      JWT_SECRET_KEY: "UneCléSecrètePourTestsCiUniquement"
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRATION_MINUTES: 60
+
 
     steps:
     - uses: actions/checkout@v4
