@@ -67,6 +67,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
             )
 
         try:
+            print(f"Token: {token}")
+            print(f"Token type: {type(token)}")
+            token = str(token)
             payload: dict = await decode_access_token(token)
             username = payload.get("sub")
             user_id = payload.get("user_id")
