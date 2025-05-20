@@ -82,15 +82,20 @@ def get_token(client, test_session):
             raise ValueError(f"Test user '{username}' does not exist in test database")
         
         print(f"Attempting login with username: {user.username}", file=sys.stderr)
-        
+
+        from urllib.parse import urlencode
+
+        form_data = urlencode({
+            "username": str(user.username),
+            "password": "admin123",
+        })
+
         response = client.post(
             "api/users/token",
-            data={
-                "username": user.username,
-                "password": "admin123",
-            },
+            data=form_data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
-
+        
         print(f"Token response: {response.status_code} - {response.text}", file=sys.stderr)
 
         if response.status_code != 200:
