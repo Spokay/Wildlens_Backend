@@ -15,7 +15,7 @@ pipeline {
             sh '''
                 rm -rf venv || true
                 
-                python -m venv venv
+                python3 -m venv venv
                 
                 . venv/bin/activate
                 pip install --upgrade pip
@@ -32,7 +32,7 @@ pipeline {
             sh '''
                 . venv/bin/activate
                 
-                python -m pytest
+                python3 -m pytest
             '''
         }
       }
