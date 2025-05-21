@@ -154,7 +154,7 @@ def create_db_and_tables(engine):
         user1 = User(
             username="user",
             email="user@user.com",
-            profile_picture="https://example.com/user.jpg",
+            profile_picture="https://cdn.unitycms.io/images/04U-s5BHKZn8IFvxj3Fr2N.jpg?op=ocroped&val=1200,800,1000,1000,0,0&sum=cctzliWlDrY",
             password=password_hashed,
             role_id=2,
         )
