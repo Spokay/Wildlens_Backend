@@ -2,6 +2,12 @@ pipeline {
     agent {
         label 'python-3-12'
     }
+
+    environment {
+      JWT_SECRET_KEY="UneCléSecrètePourTestsCiUniquement"
+      JWT_ALGORITHM=HS256
+      JWT_EXPIRATION_MINUTES=60
+    }
     
     stages {
       stage('Checkout') {
