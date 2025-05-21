@@ -15,7 +15,7 @@ pipeline {
             sh '''
                 rm -rf venv || true
                 
-                python3 -m venv venv
+                python -m venv venv
                 
                 . venv/bin/activate
                 pip install --upgrade pip
