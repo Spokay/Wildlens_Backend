@@ -146,6 +146,7 @@ class Badge(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str = Field(sa_column=Column(String(255), index=True))
     description: str = Field(sa_column=Column(TEXT))
+    badge_image: str | None = Field(sa_column=Column(TEXT))
     users: list["User"] = Relationship(back_populates="badges", link_model=UserBadge)
 
 

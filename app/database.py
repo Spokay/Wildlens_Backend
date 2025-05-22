@@ -67,27 +67,40 @@ def create_db_and_tables(engine):
 
     session = Session(engine)
 
+
     criteria1 = {"type": "identification_count_by_specie", "required": 5}
     criteria2 = {"type": "identification_count_by_specie", "required": 10}
 
     criteria3 = {"type": "identification_count_by_specie", "required": 5, "specie": 1}
     criteria4 = {"type": "identification_count_by_specie", "required": 10, "specie": 1}
 
+    badge_debut = Badge(
+        name="Début de l'aventure",
+        description="Il faut bien commencer quelque part !",
+        badge_image="https://example.com/chat.jpg",
+    )
+
     badge = Badge(
         name="Explorateur de la nature",
         description="Décerné pour avoir identifié 5 espèces différentes",
+        badge_image="https://example.com/chat.jpg",
     )
     badge2 = Badge(
         name="Véteran de la nature",
         description="Décerné pour avoir identifié 10 espèces différentes",
+        badge_image="https://example.com/chat.jpg",
     )
 
     badge3 = Badge(
-        name="Amateur de chat", description="Décerné pour avoir identifié 5 chats"
+        name="Amateur de chat",
+        description="Décerné pour avoir identifié 5 chats",
+        badge_image="https://example.com/chat.jpg",
     )
 
     badge4 = Badge(
-        name="Expert en chat", description="Décerné pour avoir identifié 10 chats"
+        name="Expert en chat",
+        description="Décerné pour avoir identifié 10 chats",
+        badge_image="https://example.com/chat.jpg",
     )
     session.add(badge)
     session.add(badge2)
