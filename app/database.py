@@ -67,7 +67,7 @@ def create_db_and_tables(engine):
 
     session = Session(engine)
 
-
+    criteria_start_test = {"type": "identification_count_by_specie", "required": 0}
     criteria1 = {"type": "identification_count_by_specie", "required": 5}
     criteria2 = {"type": "identification_count_by_specie", "required": 10}
 
@@ -102,16 +102,20 @@ def create_db_and_tables(engine):
         description="Décerné pour avoir identifié 10 chats",
         badge_image="https://example.com/chat.jpg",
     )
+    session.add(badge_debut)
     session.add(badge)
     session.add(badge2)
     session.add(badge3)
     session.add(badge4)
     session.commit()
+    session.refresh(badge_debut)
     session.refresh(badge)
     session.refresh(badge2)
     session.refresh(badge3)
     session.refresh(badge4)
 
+    badge_criteria_test = BadgeCriteria(badge_id=badge_debut.id, criteria=criteria_start_test)
+    
     badge_criteria = BadgeCriteria(badge_id=badge.id, criteria=criteria1)
 
     badge_criteria2 = BadgeCriteria(badge_id=badge2.id, criteria=criteria2)
@@ -120,11 +124,13 @@ def create_db_and_tables(engine):
 
     badge_criteria4 = BadgeCriteria(badge_id=badge4.id, criteria=criteria4)
 
+    session.add(badge_criteria_test)
     session.add(badge_criteria)
     session.add(badge_criteria2)
     session.add(badge_criteria3)
     session.add(badge_criteria4)
     session.commit()
+    session.refresh(badge_criteria_test)
     session.refresh(badge_criteria)
     session.refresh(badge_criteria2)
     session.refresh(badge_criteria3)
