@@ -61,11 +61,6 @@ async def delete_habitat_route(
         habitat_id,
         habitat_mapper,
     )
-    if not habitat:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"habitat with id {habitat_id} not found",
-        )
 
     return DeleteHabitatResponse(
         message="habitats deleted successfully", habitat=habitat

@@ -102,7 +102,7 @@ async def get_identified_specie_by_user(
     response = session.exec(statement).first()
     if not response:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Vous n'avez pas identifié cette espèce ou l'espèce n'existe pas"
         )
 
@@ -121,12 +121,10 @@ async def get_identified_species_by_user(
     )
 
     response = session.exec(statement).all()
-    print(response)
+
     if not response:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Vous n'avez pas d'espèces identifiées"
-        )
+        return []
+
     species_response = await specie_mapper.species_identified_to_info_responses(
         response
     )
@@ -143,10 +141,7 @@ async def get_all_species_by_user(
     response = session.exec(statement).all()
     print(response)
     if not response:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Vous n'avez pas d'espèces identifiées"
-        )
+        return []
     species_response = await specie_mapper.species_user_to_info_responses(
         response, user_id
     )
@@ -163,7 +158,7 @@ async def create_specie(
     already_exists = session.exec(already_exists_statement).all()
     if len(already_exists) > 0:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail=f"Specie with name {specie_to_create.name} already exists",
         )
     else:
@@ -172,14 +167,14 @@ async def create_specie(
             habitat = session.get(Habitat, habitat_id)
             if habitat is None:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
+                    status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Habitat with id {habitat_id} not found",
                 )
             habitats.append(habitat)
 
         family = session.get(Family, specie_to_create.family_id)
         if not family:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Family not found")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Family not found")
 
         new_specie = Specie(
             name=specie_to_create.name,
@@ -222,7 +217,7 @@ async def update_specie(
             habitat = session.get(Habitat, habitat_id)
             if habitat is None:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
+                    status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Habitat with id {habitat_id} not found",
                 )
             specie_to_update.habitats.append(habitat)
@@ -272,14 +267,9 @@ async def list_all_species(
     species = session.exec(statement).all()
 
     if not species:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No species found",
-        )
+        return []
 
-    specie_list = []
-    for specie in species:
-        specie_list.append(specie)
+    specie_list = [specie for specie in species]
 
     species_response = await specie_mapper.species_to_basic_info_responses(specie_list)
 
