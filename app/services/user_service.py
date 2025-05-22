@@ -60,8 +60,6 @@ async def update_user_fields(
 ) -> User:
     for key, value in new_user_info.model_dump(mode="json", exclude_unset=True).items():
         if hasattr(user_to_update, key):
-            if key == "password":
-                value = get_password_hash(value)
             setattr(user_to_update, key, value)
         else:
             raise HTTPException(

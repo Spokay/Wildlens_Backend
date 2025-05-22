@@ -121,12 +121,6 @@ async def update_user_route(
         user_mapper=Depends(get_user_mapper),
         user_update: UpdateUserInfo = Body(...),
 ) -> UpdateUserResponse:
-    if user_update.password and not await is_password_valid(user_update.password):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Password is not valid",
-        )
-
     if await user_exists(session, user_update.username):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
