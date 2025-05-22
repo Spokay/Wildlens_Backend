@@ -175,12 +175,6 @@ async def delete_user_route(
 ) -> DeleteUserResponse:
     user = await delete_user(session, user_id, user_mapper)
 
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"user with id {user_id} not found",
-        )
-
     return DeleteUserResponse(message="user deleted successfully", user=user)
 
 

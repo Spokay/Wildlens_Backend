@@ -62,11 +62,6 @@ async def delete_family_route(
         family_id,
         family_mapper,
     )
-    if not family:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"family with id {family_id} not found",
-        )
 
     return DeleteFamilyResponse(message="family deleted successfully", family=family)
 

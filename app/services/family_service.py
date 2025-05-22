@@ -19,7 +19,7 @@ async def create_family(
     already_exists = session.exec(already_exists_statement).all()
     if len(already_exists) > 0:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail=f"family with name {family_to_create.name} already exists",
         )
     else:
@@ -83,14 +83,9 @@ async def list_all_families(
     families = session.exec(statement).all()
 
     if not families:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No familys found",
-        )
+        return []
 
-    family_list = []
-    for family in families:
-        family_list.append(family)
+    family_list = [family for family in families]
 
     familes_response = await family_mapper.families_to_response(family_list)
 

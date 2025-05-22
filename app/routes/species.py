@@ -250,11 +250,6 @@ async def delete_specie_route(
     specie_mapper=Depends(get_specie_mapper),
 ) -> DeleteSpecieResponse:
     specie = await delete_specie(session, specie_id, specie_mapper)
-    if not specie:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Specie with id {specie_id} not found",
-        )
 
     return DeleteSpecieResponse(message="Species deleted successfully", specie=specie)
 

@@ -21,7 +21,7 @@ async def create_habitat(
     already_exists = session.exec(already_exists_statement).all()
     if len(already_exists) > 0:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail=f"habitat with name {habitat_to_create.name} already exists",
         )
     else:
@@ -88,14 +88,9 @@ async def list_all_habitats(
     habitats = session.exec(statement).all()
 
     if not habitats:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No habitats found",
-        )
+        return []
 
-    habitat_list = []
-    for habitat in habitats:
-        habitat_list.append(habitat)
+    habitat_list = [habitat for habitat in habitats]
 
     familes_response = await habitat_mapper.habitat_list_to_response(habitat_list)
 
