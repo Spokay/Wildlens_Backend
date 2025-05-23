@@ -121,12 +121,6 @@ async def update_user_route(
         user_mapper=Depends(get_user_mapper),
         user_update: UpdateUserInfo = Body(...),
 ) -> UpdateUserResponse:
-    if await user_exists(session, user_update.username):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="User already exists",
-        )
-
     user = await update_user(
         session,
         user_mapper,

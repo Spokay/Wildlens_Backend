@@ -59,7 +59,14 @@ async def update_user_fields(
         session: Session, new_user_info: UpdateUserInfo, user_to_update: User
 ) -> User:
     for key, value in new_user_info.model_dump(mode="json", exclude_unset=True).items():
-        if hasattr(user_to_update, key):
+        if key == "password":
+            if not await is_password_valid(value):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="password must be at least 8 characters long",
+                )
+            user_to_update.password = get_password_hash(value)
+        elif hasattr(user_to_update, key):
             setattr(user_to_update, key, value)
         else:
             raise HTTPException(
@@ -69,7 +76,7 @@ async def update_user_fields(
 
     session.add(user_to_update)
     session.commit()
-    session.refresh(user_to_update)
+    session.commit()
     return user_to_update
 
 
@@ -101,6 +108,15 @@ async def update_user(
 ) -> UserResponse:
     user_to_update: User = await get_user_by_id(session, user_id)
 
+    user_with_same_username: Optional[User] = await get_user_by_username(
+        session, new_user_info.username
+    )
+
+    if user_with_same_username and user_with_same_username.id != user_to_update.id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="username already taken",
+        )
     updated_user = await update_user_fields(session, new_user_info, user_to_update)
     return await user_mapper.user_to_response(updated_user)
 
