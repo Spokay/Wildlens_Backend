@@ -3,15 +3,16 @@ from datetime import timedelta, datetime, timezone
 import jwt
 from pydantic import BaseModel
 
-from app.config import SECRET_KEY, ALGORITHM
+from app.config import get_settings
 
+settings = get_settings()
 
 def _get_secret_key():
-    return SECRET_KEY
+    return settings.jwt_secret_key
 
 
 def _get_algorithm():
-    return ALGORITHM
+    return settings.jwt_algorithm
 
 
 class Token(BaseModel):

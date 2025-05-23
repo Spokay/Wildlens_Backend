@@ -1,10 +1,8 @@
-import os
-
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from app.config import API_PREFIX
+from app.config import get_settings, logger
 
 from contextlib import asynccontextmanager
 from typing import Annotated
@@ -23,31 +21,55 @@ from app.routes import users, species, families, habitats
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
+settings = get_settings()
 
 @asynccontextmanager
-async def lifespan(app_object: FastAPI):
-    # Executed before startup (setup):
-    create_db_and_tables(database_engine)
-    # ------------------------------
-    yield  # <--- This is where the context manager pauses and the application starts
-    # ------------------------------
-    # Executed after shutdown (cleanup):
-    #
-    #
+async def lifespan(app: FastAPI):
+    # Startup logic
+    logger.info(f"Starting application in {settings.environment} mode")
+
+    # Validating required configurations
+    if settings.is_production:
+        if not settings.wildlens_prediction_api_key:
+            raise ValueError("WILDLENS_PREDICTION_API_KEY missing in production")
+        if not settings.jwt_secret_key:
+            raise ValueError("JWT_SECRET_KEY missing in production")
 
 
-app = FastAPI(root_path=API_PREFIX, lifespan=lifespan)
+    if settings.is_development:
+        logger.info("Creating database and tables")
+        await create_db_and_tables(engine=database_engine)
+        # TODO: create a specific method to add fake data for development mode
 
-Instrumentator().instrument(app).expose(app)
+    elif settings.is_production:
+        # Add any production-specific startup logic here
+        pass
 
-app.add_middleware(AuthMiddleware)
-app.add_middleware(ExceptionHandlerLoggingMiddleware)
+    # Application is ready to serve requests
+    yield
 
-app.include_router(users.router)
-app.include_router(species.router)
-app.include_router(families.router)
-app.include_router(habitats.router)
+    # Shutdown logic
+    logger.info("Shutting down application")
+
+def create_app():
+    wildlens_app = FastAPI(root_path=settings.api_prefix, lifespan=lifespan)
+
+    # Exposing Prometheus metrics endpoints
+    Instrumentator().instrument(wildlens_app).expose(wildlens_app)
+
+    # Middlewares
+    wildlens_app.add_middleware(AuthMiddleware)
+    wildlens_app.add_middleware(ExceptionHandlerLoggingMiddleware)
+
+    # Routers
+    wildlens_app.include_router(users.router)
+    wildlens_app.include_router(species.router)
+    wildlens_app.include_router(families.router)
+    wildlens_app.include_router(habitats.router)
+
+    return wildlens_app
+
+app = create_app()
 
 if __name__ == "__main__":
-    port = int(os.getenv("APP_PORT", 8002))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(app, host="0.0.0.0", port=settings.app_port)

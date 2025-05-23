@@ -24,3 +24,4 @@ prometheus-fastapi-instrumentator~=7.1.0
 pymysql~=1.1.1
 rich>=10.11.0
 chardet~=4.0.0
+pydantic-settings~=2.6.1

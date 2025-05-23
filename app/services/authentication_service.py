@@ -1,6 +1,4 @@
 import traceback
-from functools import wraps
-import pytest
 from typing import Optional
 
 from fastapi import HTTPException
@@ -12,7 +10,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from app.config import EXCLUDED_PATHS, logger
+from app.config import logger, get_settings
 from app.dto.users import AuthenticatedUser
 from app.models import User
 from app.services.token_service import decode_access_token
@@ -20,6 +18,7 @@ from app.services.user_service import get_user_by_username, verify_password
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/token")
 
+settings = get_settings()
 
 async def authenticate_user(session: Session, username: str, password: str):
     user: Optional[User] = await get_user_by_username(session, username)
@@ -56,7 +55,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         normalized_path = request.url.path.rstrip("/")
 
-        if normalized_path in EXCLUDED_PATHS:
+        if normalized_path in settings.excluded_paths:
             return await call_next(request)
 
         token = await extract_token_from_request(request)

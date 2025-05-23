@@ -3,10 +3,11 @@ from typing import Dict, Any
 from sqlalchemy.sql.functions import count
 from sqlmodel import Session, select
 
-from app.config import NUMBER_OF_CLASSES
+from app.config import get_settings
 from app.dto.badge import BadgeResponse
 from app.models import Badge, UserBadge, Identification, BadgeCriteria
 
+settings = get_settings()
 
 async def get_user_badges(user_id: int, session : Session) -> list[BadgeResponse]:
 
@@ -92,7 +93,7 @@ async def evaluate_all_specied_identified(user_id: int, session: Session) -> boo
     statement = select(count()).distinct(Identification.specie_id).where(Identification.user_id == user_id)
     amount_different_identified_species = session.exec(statement).one()
 
-    return NUMBER_OF_CLASSES == amount_different_identified_species
+    return settings.number_of_classes == amount_different_identified_species
 
 async def evaluate_criteria(user_id: int, criteria: Dict[str, Any], session: Session) -> bool:
     criteria_type = criteria.get("type")

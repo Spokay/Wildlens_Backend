@@ -1,48 +1,218 @@
 import logging
-import os
 import pathlib
-import re
+from functools import lru_cache
+from typing import List, Optional
 
+from pydantic import field_validator, model_validator, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Prediction API
-WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD = 0.6
 
-WILDLENS_PREDICTION_API_BASE_URL = os.getenv("WILDLENS_PREDICTION_API_BASE_URL", "")
-WILDLENS_PREDICTION_API_KEY = os.getenv("WILDLENS_PREDICTION_API_KEY", "")
+class Settings(BaseSettings):
+    """Application configuration"""
 
-PREDICTION_AUHTORIZED_MIME_TYPES = [
-    "image/jpeg",
-    "image/png"
-]
+    # Environment
+    environment: str = Field(default="development", description="Runtime environment")
+    debug: bool = Field(default=True, description="Debug mode")
+    app_port: int = Field(default=8002, description="Application port")
+
+    # Prediction API - Wildlens
+    wildlens_footprint_binary_classification_threshold: float = Field(
+        default=0.6,
+        description="Binary classification threshold for footprints"
+    )
+    wildlens_prediction_api_base_url: str = Field(
+        default="",
+        description="Wildlens prediction API base URL",
+        validation_alias="WILDLENS_PREDICTION_API_BASE_URL"
+    )
+    wildlens_prediction_api_key: str = Field(
+        default="",
+        description="Wildlens API key",
+        validation_alias="WILDLENS_PREDICTION_API_KEY"
+    )
+
+    # Authorized MIME types for predictions
+    prediction_authorized_mime_types: List[str] = Field(
+        default=["image/jpeg", "image/png"],
+        description="Authorized MIME types for predictions"
+    )
+
+    # Prediction configuration
+    number_of_classes: int = Field(default=1, description="Number of classes for prediction")
+
+    # JWT Configuration
+    jwt_secret_key: Optional[str] = Field(
+        default=None,
+        description="Secret key for JWT",
+        validation_alias="JWT_SECRET_KEY"
+    )
+    jwt_algorithm: str = Field(
+        default="HS256",
+        description="JWT signature algorithm",
+        validation_alias="JWT_ALGORITHM"
+    )
+    access_token_expire_minutes: int = Field(
+        default=30,
+        description="Access token expiration time in minutes",
+        validation_alias="JWT_EXPIRATION_MINUTES"
+    )
+
+    # Azure Blob Storage Configuration
+    azure_storage_account_name: str = Field(
+        default="",
+        description="Azure Storage account name",
+        validation_alias="AZURE_STORAGE_ACCOUNT_NAME"
+    )
+    azure_storage_account_key: str = Field(
+        default="",
+        description="Azure Storage account key",
+        validation_alias="AZURE_STORAGE_ACCOUNT_KEY"
+    )
+    azure_storage_container_name: str = Field(
+        default="",
+        description="Azure Storage container name",
+        validation_alias="AZURE_STORAGE_CONTAINER_NAME"
+    )
+
+    # API Configuration
+    api_prefix: str = Field(
+        default="/api",
+        description="Prefix for API routes"
+    )
+
+    # Computed properties
+    @property
+    def project_root(self) -> pathlib.Path:
+        """Project root directory"""
+        return pathlib.Path(__file__).resolve().parent.parent
+
+    @property
+    def excluded_paths(self) -> List[str]:
+        """Paths excluded from authentication"""
+        return [
+            "/metrics",  # Prometheus metrics
+            "/docs",  # Swagger UI
+            f"{self.api_prefix}/openapi.json",  # OpenAPI schema
+            f"{self.api_prefix}/users/token",  # Login
+            f"{self.api_prefix}/users/register"  # Register
+        ]
+
+    @property
+    def is_development(self) -> bool:
+        """Check if running in development mode"""
+        return self.environment.lower() == "development"
+
+    @property
+    def is_production(self) -> bool:
+        """Check if running in production mode"""
+        return self.environment.lower() == "production"
+
+    # Pydantic V2 field validators
+    @field_validator('environment')
+    @classmethod
+    def validate_environment(cls, v: str) -> str:
+        allowed = ['development', 'production', 'testing']
+        if v.lower() not in allowed:
+            raise ValueError(f'Environment must be one of: {allowed}')
+        return v.lower()
+
+    @field_validator('wildlens_footprint_binary_classification_threshold')
+    @classmethod
+    def validate_threshold(cls, v: float) -> float:
+        if not 0 <= v <= 1:
+            raise ValueError('Threshold must be between 0 and 1')
+        return v
+
+    @field_validator('access_token_expire_minutes')
+    @classmethod
+    def validate_token_expiry(cls, v: int) -> int:
+        if v <= 0:
+            raise ValueError('Expiration time must be positive')
+        return v
+
+    @field_validator('jwt_secret_key')
+    @classmethod
+    def validate_secret_key(cls, v: Optional[str]) -> Optional[str]:
+        if v and len(v) < 32:
+            raise ValueError('JWT_SECRET_KEY must be at least 32 characters long')
+        return v
+
+    @field_validator('api_prefix')
+    @classmethod
+    def validate_api_prefix(cls, v: str) -> str:
+        if not v.startswith('/'):
+            v = f'/{v}'
+        return v.rstrip('/')
+
+    # Model validator for cross-field validation (Pydantic V2)
+    @model_validator(mode='after')
+    def validate_production_requirements(self) -> 'Settings':
+        """Production-specific validation"""
+        if self.environment == 'production':
+            if not self.jwt_secret_key:
+                raise ValueError('JWT_SECRET_KEY is required in production')
+        return self
+
+    # Pydantic settings configuration
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        # Environment variable mapping
+        env_nested_delimiter="__",
+        extra="ignore"
+    )
 
 
-NUMBER_OF_CLASSES = 1
+# Environment-specific configuration classes
+class DevelopmentSettings(Settings):
+    """Development environment configuration"""
+    environment: str = "development"
+    debug: bool = True
 
-PROJECT_ROOT = pathlib.Path(__file__).resolve().parent.parent
-
-
-# JWT
-SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-
-ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRATION_MINUTES", 30))
-
-# Regex patterns
-email_validation_regex = re.compile(r"([-!#-'*+/-9=?A-Z^-~]+(\.[-!#-'*+/-9=?A-Z^-~]+)*|\"([]!#-[^-~ \t]|(\\[\t -~]))+\")@([-!#-'*+/-9=?A-Z^-~]+(\.[-!#-'*+/-9=?A-Z^-~]+)*|\[[\t -Z^-~]*])")
+    # Default values for development
+    jwt_secret_key: str = "dev-secret-key-1234567891234567890"
 
 
-# API
-API_PREFIX = os.getenv("API_PREFIX", "/api")
+class ProductionSettings(Settings):
+    """Production environment configuration"""
+    environment: str = "production"
+    debug: bool = False
 
-EXCLUDED_PATHS = [
-    "/metrics", # Prometheus metrics
-    "/docs", # Swagger UI
-    f"{API_PREFIX}/openapi.json", # OpenAPI schema
-    f"{API_PREFIX}/users/token", # Login
-    f"{API_PREFIX}/users/register" # Register
-]
+    # Required values in production
+    wildlens_prediction_api_base_url: str = Field(..., description="API URL required in production")
+    wildlens_prediction_api_key: str = Field(..., description="API key required in production")
+    jwt_secret_key: str = Field(..., description="JWT key required in production")
+
+    azure_storage_account_name: str = Field(..., description="Azure account name required in production")
+    azure_storage_account_key: str = Field(..., description="Azure account key required in production")
+    azure_storage_container_name: str = Field(..., description="Azure container name required in production")
+
+
+
+class TestingSettings(Settings):
+    """Testing environment configuration"""
+    environment: str = "testing"
+    debug: bool = True
+    jwt_secret_key: str = "test-secret-key-12345678901234567890"
+
+
+@lru_cache()
+def get_settings() -> Settings:
+    """
+    Returns configuration based on environment.
+    Uses cache to keep the config between each calls.
+    """
+    import os
+    environment = os.getenv("ENVIRONMENT", "development").lower()
+
+    if environment == "production":
+        return ProductionSettings()
+    elif environment == "testing":
+        return TestingSettings()
+    else:
+        return DevelopmentSettings()

@@ -1,24 +1,27 @@
-from fastapi import UploadFile, HTTPException
-from httpx import Headers, Client, AsyncClient
+from functools import lru_cache
 
-from app.config import WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD, NUMBER_OF_CLASSES, \
-    WILDLENS_PREDICTION_API_BASE_URL, WILDLENS_PREDICTION_API_KEY, PREDICTION_AUHTORIZED_MIME_TYPES
+from fastapi import UploadFile, HTTPException
+from httpx import Headers, Client
+
+from app.config import get_settings
 from app.dto.species import SpeciePrediction
 
-BINARY_PREDICTION_URL = f"{WILDLENS_PREDICTION_API_BASE_URL}/predictions/binary"
-MULTICLASS_PREDICTION_URL = f"{WILDLENS_PREDICTION_API_BASE_URL}/predictions/multiclass"
+settings = get_settings()
+
+BINARY_PREDICTION_URL = f"{settings.wildlens_prediction_api_base_url}/predictions/binary"
+MULTICLASS_PREDICTION_URL = f"{settings.wildlens_prediction_api_base_url}/predictions/multiclass"
 
 
 def get_client():
-    headers = Headers({"Authorization": f"Key {WILDLENS_PREDICTION_API_KEY}"})
+    headers = Headers({"Authorization": f"Key {settings.wildlens_prediction_api_key}"})
     return Client(
         headers=headers,
-        base_url=WILDLENS_PREDICTION_API_BASE_URL,
+        base_url=settings.wildlens_prediction_api_base_url,
     )
 
 
 async def assert_content_type_is_valid(content_type: str):
-    if content_type not in PREDICTION_AUHTORIZED_MIME_TYPES:
+    if content_type not in settings.prediction_authorized_mime_types:
         raise HTTPException(
             status_code=400,
             detail="Invalid file type. Please upload a JPEG or PNG image.",
@@ -40,7 +43,7 @@ class WildlensAPIService:
             probability = predictions["predictions"][0]
 
             # Return True if the probability that it is a footprint is greater than the threshold, False otherwise
-            return bool(probability >= WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD)
+            return bool(probability >= settings.wildlens_footprint_binary_classification_threshold)
 
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error while processing footprint check: {str(e)}")
@@ -65,9 +68,9 @@ class WildlensAPIService:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error while processing footprint classification: {str(e)}")
 
-
+@lru_cache
 def get_wildlens_api_service():
     return WildlensAPIService(
         client=get_client(),
-        nb_classes=NUMBER_OF_CLASSES
+        nb_classes=settings.number_of_classes
     )

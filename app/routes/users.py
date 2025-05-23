@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 from starlette import status
 
-from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
+from app.config import Settings, get_settings
 from app.database import get_session
 from app.dto.badge import BadgeResponse
 from app.dto.users import (
@@ -46,6 +46,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 async def login_for_access_token(
         form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
         session: Session = Depends(get_session),
+        settings: Settings = Depends(get_settings)
 ) -> Token:
 
     user = await authenticate_user(session, form_data.username, form_data.password)
@@ -58,7 +59,7 @@ async def login_for_access_token(
         )
 
 
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = await create_access_token(
         data={"sub": user.username, "user_id": user.id, "role": user.role.name},
         expires_delta=access_token_expires,
@@ -73,7 +74,7 @@ async def login_for_access_token(
     status_code=status.HTTP_201_CREATED,
 )
 async def register_user(
-        register_request: RegisterRequest, session: Session = Depends(get_session)
+        register_request: RegisterRequest, session: Session = Depends(get_session), settings: Settings = Depends(get_settings)
 ) -> Token:
     try:
         if not await is_password_valid(register_request.password):
@@ -95,7 +96,7 @@ async def register_user(
             register_request.password,
         )
 
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
         access_token = await create_access_token(
             data={
                 "sub": created_user.email,
