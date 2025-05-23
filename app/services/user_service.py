@@ -76,7 +76,7 @@ async def update_user_fields(
 
     session.add(user_to_update)
     session.commit()
-    session.commit()
+    session.refresh(user_to_update)
     return user_to_update
 
 
