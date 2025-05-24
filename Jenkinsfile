@@ -33,7 +33,6 @@ pipeline {
     stage('Deployment') {
 
       steps {
-        step {
             checkout scmGit(
             branches: [[name: 'master']],
             userRemoteConfigs: [
@@ -43,9 +42,7 @@ pipeline {
             ]
             )
             sh 'pwd'
-        }
        
-        step {
             withCredentials([string(credentialsId: 'wildlens_backend_env_file', variable: 'back_env_file')]) {
                 sh 'echo $back_env_file > .env.backend'
                 sh 'echo ENVIRONMENT=production >> .env.backend'
@@ -65,7 +62,6 @@ pipeline {
             sh 'cat .env.prediction'
             sh 'cat .env.grafana'
         }
-      }
     }
 
   }
