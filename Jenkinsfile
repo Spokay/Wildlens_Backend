@@ -66,6 +66,7 @@ pipeline {
                     writeFile file: '.env.grafana', text: grafana_env_file
                 }
             }
+            sh 'chmod 600 .env.backend .env.db .env.prediction .env.grafana'
             script {
                 docker.withRegistry('https://registry.spokayhub.top', 'spokayhub-registry-credentials') {
                     sh 'docker compose pull'
