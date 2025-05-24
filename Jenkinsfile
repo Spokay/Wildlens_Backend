@@ -36,7 +36,7 @@ pipeline {
             checkout scmGit(
             branches: [[name: 'master']],
             userRemoteConfigs: [[
-                url: 'https://github.com/WildLens/Wildlens_CICD.git',
+                url: 'https://github.com/Spokay/Wildlens_CICD.git',
                 credentialsId: 'jenkins-spokay-github-credential'
             ]]
             )
