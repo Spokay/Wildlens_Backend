@@ -35,11 +35,10 @@ pipeline {
       steps {
             checkout scmGit(
             branches: [[name: 'master']],
-            userRemoteConfigs: [
-                [
-                url: 'https://github.com/WildLens/Wildlens_CICD.git'
-                ]
-            ]
+            userRemoteConfigs: [[
+                url: 'https://github.com/WildLens/Wildlens_CICD.git',
+                credentialsId: 'jenkins-spokay-github-credential'
+            ]]
             )
             sh 'pwd'
        
