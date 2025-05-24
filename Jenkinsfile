@@ -42,19 +42,26 @@ pipeline {
             )
             sh 'pwd'
        
-            withCredentials([file(credentialsId: 'wildlens_backend_env_file', variable: 'back_env_file')]) {
-                sh "mv $back_env_file .env.backend"
-                sh 'echo ENVIRONMENT=production >> .env.backend'
-            }
-            withCredentials([file(credentialsId: 'wildlens_db_env_file', variable: 'db_env_file')]) {
-                sh "mv $db_env_file .env.db"
-            }
-            withCredentials([file(credentialsId: 'wildlens_prediction_env_file', variable: 'prediction_env_file')]) {
-                sh "mv $prediction_env_file .env.prediction"
-            }
-            withCredentials([file(credentialsId: 'wildlens_grafana_env_file', variable: 'grafana_env_file')]) {
-                sh "mv $grafana_env_file .env.grafana"
-            }
+            // withCredentials([file(credentialsId: 'wildlens_backend_env_file', variable: 'back_env_file')]) {
+            //     sh "mv $back_env_file .env.backend"
+            //     sh 'echo ENVIRONMENT=production >> .env.backend'
+            // }
+            // withCredentials([file(credentialsId: 'wildlens_db_env_file', variable: 'db_env_file')]) {
+            //     sh "mv $db_env_file .env.db"
+            // }
+            // withCredentials([file(credentialsId: 'wildlens_prediction_env_file', variable: 'prediction_env_file')]) {
+            //     sh "mv $prediction_env_file .env.prediction"
+            // }
+            // withCredentials([file(credentialsId: 'wildlens_grafana_env_file', variable: 'grafana_env_file')]) {
+            //     sh "mv $grafana_env_file .env.grafana"
+            // }
+
+            configFileProvider([
+                configFile(fileId: 'wildlens_backend_env_file', targetLocation: '.env.backend')
+                configFile(fileId: 'wildlens_db_env_file', targetLocation: '.env.db')
+                configFile(fileId: 'wildlens_prediction_env_file', targetLocation: '.env.prediction')
+                configFile(fileId: 'wildlens_grafana_env_file', targetLocation: '.env.grafana')
+            ]) {
 
             sh 'cat .env.backend'
             sh 'cat .env.db'
