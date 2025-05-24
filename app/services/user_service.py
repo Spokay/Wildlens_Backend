@@ -1,8 +1,7 @@
 from typing import Optional
 
-
 from passlib.context import CryptContext
-from sqlmodel import Session, select
+from sqlmodel import Session, select, or_
 from fastapi import HTTPException, status
 
 from app.dto.users import UpdateUserInfo, UserResponse, AuthenticatedUser
@@ -80,9 +79,14 @@ async def update_user_fields(
     return user_to_update
 
 
-async def get_user_by_username(session: Session, username: str) -> Optional[User]:
+async def get_user_by_username_or_email(session: Session, username_or_email: str) -> Optional[User]:
     return session.exec(
-        select(User).where(User.email == username or User.username == username)
+        select(User).where(
+            or_(
+                User.email == username_or_email,
+                User.username == username_or_email
+            )
+        )
     ).first()
 
 async def get_current_user_info(
@@ -108,7 +112,7 @@ async def update_user(
 ) -> UserResponse:
     user_to_update: User = await get_user_by_id(session, user_id)
 
-    user_with_same_username: Optional[User] = await get_user_by_username(
+    user_with_same_username: Optional[User] = await get_user_by_username_or_email(
         session, new_user_info.username
     )
 

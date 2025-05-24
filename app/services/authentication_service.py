@@ -14,14 +14,14 @@ from app.config import logger, get_settings
 from app.dto.users import AuthenticatedUser
 from app.models import User
 from app.services.token_service import decode_access_token
-from app.services.user_service import get_user_by_username, verify_password
+from app.services.user_service import get_user_by_username_or_email, verify_password
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/token")
 
 settings = get_settings()
 
 async def authenticate_user(session: Session, username: str, password: str):
-    user: Optional[User] = await get_user_by_username(session, username)
+    user: Optional[User] = await get_user_by_username_or_email(session, username)
     if not user:
         return False
 
@@ -66,8 +66,6 @@ class AuthMiddleware(BaseHTTPMiddleware):
             )
 
         try:
-            print(f"Token: {token}")
-            print(f"Token type: {type(token)}")
             token = str(token)
             payload: dict = await decode_access_token(token)
             username = payload.get("sub")

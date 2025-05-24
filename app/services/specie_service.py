@@ -1,11 +1,10 @@
 import os
 import tempfile
-import aiofiles
 from typing import Optional, Tuple
 
+import aiofiles
 from fastapi import HTTPException, UploadFile
-from numpy.f2py.auxfuncs import throw_error
-from sqlmodel import Session, select, insert
+from sqlmodel import Session, select
 from starlette import status
 
 from app.dto.species import (
@@ -58,7 +57,6 @@ async def upload_blob_from_temp_file(
     upload_info: UploadInfo, azure_blob_service: AzureBlobService
 ):
     try:
-        print(upload_info.tmp_file_path)
 
         async with aiofiles.open(upload_info.tmp_file_path, "rb") as f:
             tmp_img = await f.read()
@@ -109,9 +107,45 @@ async def get_identified_specie_by_user(
     return await specie_mapper.specie_identified_to_info_response(response)
 
 
+async def _get_species_with_user_data(
+        species: list[Specie],
+        user_id: int,
+        session: Session
+) -> list[dict]:
+
+    if not species:
+        return []
+
+    # Get user identifications for the given species
+    identifications = await get_user_identifications_for_given_species(
+        user_id, species, session
+    )
+
+    # Group by specie_id
+    identifications_map: dict[int, list[Identification]] = {}
+    for identification in identifications:
+        specie_id = identification.specie_id
+        if specie_id not in identifications_map:
+            identifications_map[specie_id] = []
+        identifications_map[specie_id].append(identification)
+
+    # Combine data
+    result = []
+    for specie in species:
+        user_identifications = identifications_map.get(specie.id, [])
+        result.append({
+            'specie': specie,
+            'user_identifications': user_identifications,
+            'is_identified': len(user_identifications) > 0
+        })
+
+    return result
+
+
 async def get_identified_species_by_user(
-    user_id: int, session: Session, specie_mapper: SpecieMapper
+        user_id: int, session: Session, specie_mapper: SpecieMapper
 ) -> list[SpecieIdentifiedResponse]:
+
     statement = (
         select(Specie)
         .join(Identification)
@@ -120,33 +154,43 @@ async def get_identified_species_by_user(
         .group_by(Specie.id)
     )
 
-    response = session.exec(statement).all()
+    species_identified_by_user = session.exec(statement).all()
 
-    if not response:
-        return []
-
-    species_response = await specie_mapper.species_identified_to_info_responses(
-        response
+    # Use helper function to get user data
+    species_data = await _get_species_with_user_data(
+        species_identified_by_user, user_id, session
     )
 
-    return species_response
+    return await specie_mapper.specie_with_user_identifications_to_info_responses(species_data)
 
-async def get_all_species_by_user(
-    user_id: int, session: Session, specie_mapper: SpecieMapper
+
+async def get_all_species_with_user_identification_data(
+        user_id: int, session: Session, specie_mapper: SpecieMapper
 ) -> list[SpecieIdentifiedResponse]:
-    statement = (
-        select(Specie)
+
+    # Get all species
+    all_species = session.exec(select(Specie)).all()
+
+    # Use helper function to get user data
+    species_data = await _get_species_with_user_data(
+        all_species, user_id, session
     )
 
-    response = session.exec(statement).all()
-    print(response)
-    if not response:
-        return []
-    species_response = await specie_mapper.species_user_to_info_responses(
-        response, user_id
-    )
+    return await specie_mapper.specie_with_user_identifications_to_info_responses(species_data)
 
-    return species_response
+async def get_user_identifications_for_given_species(
+    user_id: int, species: list[Specie], session: Session
+) -> list[Identification]:
+    specie_ids = [specie.id for specie in species]
+    identifications = session.exec(
+        select(Identification)
+        .where(Identification.specie_id.in_(specie_ids))
+        .where(Identification.user_id == user_id)
+        .order_by(Identification.specie_id, Identification.date_identified)
+    ).all()
+
+    return identifications
+
 
 async def create_specie(
     session: Session, specie_mapper: SpecieMapper, specie_to_create: CreateSpecieInfo

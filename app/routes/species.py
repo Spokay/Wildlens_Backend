@@ -39,8 +39,7 @@ from app.services.specie_service import (
     upload_blob_from_temp_file,
     save_temporary_file,
     create_specie,
-    get_identified_specie_by_user,
-    get_all_species_by_user,
+    get_identified_specie_by_user, get_all_species_with_user_identification_data,
 )
 from app.services.wildlens_api_service import (
     WildlensAPIService,
@@ -213,7 +212,7 @@ async def get_user_identified_species(
     session: Session = Depends(get_session),
     specie_mapper=Depends(get_specie_mapper),
 ) -> list[SpecieIdentifiedResponse]:
-    species_identified = await get_all_species_by_user(
+    species_identified = await get_all_species_with_user_identification_data(
         current_user.user_id, session, specie_mapper
     )
 

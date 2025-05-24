@@ -41,7 +41,6 @@ async def lifespan(app: FastAPI):
         pass
 
     elif settings.is_production:
-        # Add any production-specific startup logic here
         pass
 
     try:

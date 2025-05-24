@@ -12,8 +12,6 @@ logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
-    """Application configuration"""
-
     # Environment
     environment: str = Field(default="development", description="Runtime environment")
     debug: bool = Field(default=True, description="Debug mode")
@@ -107,18 +105,17 @@ class Settings(BaseSettings):
     )
     db_driver: str = Field(
         default="mariadb+pymysql",
-        description="Database driver (mariadb+pymysql, mysql+pymysql, etc.)"
+        description="Database driver"
     )
 
     # Computed properties
     @property
     def project_root(self) -> pathlib.Path:
-        """Project root directory"""
         return pathlib.Path(__file__).resolve().parent.parent
 
     @property
     def excluded_paths(self) -> List[str]:
-        """Paths excluded from authentication"""
+        # Paths that do not require authentication
         return [
             "/metrics",  # Prometheus metrics
             "/docs",  # Swagger UI
@@ -128,26 +125,22 @@ class Settings(BaseSettings):
         ]
 
     @property
-    def is_using_memory_db(self) -> bool:
-        """Check if using in-memory database"""
-        return self.database_url == "sqlite:///:memory:"
+    def is_using_local_db(self) -> bool:
+        return self.database_url == "sqlite:///wildlens.db"
 
     @property
     def database_url(self) -> str:
-        """Build database connection string dynamically"""
         if not all([self.db_host, self.db_name, self.db_user, self.db_password]):
-            return "sqlite:///:memory:"
+            return "sqlite:///wildlens.db"
 
         return f"{self.db_driver}://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
 
     @property
     def is_development(self) -> bool:
-        """Check if running in development mode"""
         return self.environment.lower() == "development"
 
     @property
     def is_production(self) -> bool:
-        """Check if running in production mode"""
         return self.environment.lower() == "production"
 
     # Pydantic V2 field validators
@@ -194,10 +187,9 @@ class Settings(BaseSettings):
             raise ValueError('Database port must be between 1 and 65535')
         return v
 
-    # Model validator for cross-field validation (Pydantic V2)
+
     @model_validator(mode='after')
     def validate_production_requirements(self) -> 'Settings':
-        """Production-specific validation"""
         if self.environment == 'production':
             if not self.jwt_secret_key:
                 raise ValueError('JWT_SECRET_KEY is required in production')
@@ -216,7 +208,6 @@ class Settings(BaseSettings):
 
 # Environment-specific configuration classes
 class DevelopmentSettings(Settings):
-    """Development environment configuration"""
     environment: str = "development"
     debug: bool = True
 
@@ -225,7 +216,6 @@ class DevelopmentSettings(Settings):
 
 
 class ProductionSettings(Settings):
-    """Production environment configuration"""
     environment: str = "production"
     debug: bool = False
 
@@ -241,7 +231,6 @@ class ProductionSettings(Settings):
 
 
 class TestingSettings(Settings):
-    """Testing environment configuration"""
     environment: str = "testing"
     debug: bool = True
     jwt_secret_key: str = "test-secret-key-12345678901234567890"

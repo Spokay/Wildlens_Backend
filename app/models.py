@@ -3,9 +3,7 @@ from typing import Dict
 
 from pydantic import ConfigDict
 from sqlalchemy import String, Column, JSON, TEXT
-from sqlmodel import SQLModel, Field, Relationship, Session, select, insert
-
-
+from sqlmodel import SQLModel, Field, Relationship, Session, select
 
 
 class Family(SQLModel, table=True):
@@ -44,65 +42,6 @@ class Specie(SQLModel, table=True):
     users: list["User"] = Relationship(
         back_populates="species", link_model=Identification
     )
-
-    @property
-    def identifications(self):
-        from app.database import database_engine
-
-        statement = (
-            select(Identification)
-            .where(Identification.specie_id == self.id)
-            .order_by(Identification.date_identified)
-        )
-
-        with Session(database_engine) as session:
-            try:
-                response = session.exec(statement).all()
-                if response:
-                    return response
-                else:
-                    return []
-            finally:
-                session.close()
-
-    def identifications_for_user(self, user_id):
-        from app.database import database_engine
-
-        statement = (
-            select(Identification)
-            .where(Identification.specie_id == self.id)
-            .where(Identification.user_id == user_id)
-            .order_by(Identification.date_identified)
-        )
-
-        with Session(database_engine) as session:
-            try:
-                response = session.exec(statement).all()
-                if response:
-                    return response
-                else:
-                    return []
-            finally:
-                session.close()
-
-    def identifications_for_user(self, user_id):
-        from app.database import database_engine
-        statement = (
-            select(Identification)
-            .where(Identification.specie_id == self.id)
-            .where(Identification.user_id == user_id)
-            .order_by(Identification.date_identified)
-        )
-
-        with Session(database_engine) as session:
-            try:
-                response = session.exec(statement).all()
-                if response:
-                    return response
-                else:
-                    return []
-            finally:
-                session.close()
 
 class Habitat(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)

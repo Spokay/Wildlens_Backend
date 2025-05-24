@@ -87,7 +87,7 @@ class SpecieMapper:
             footprint_exemple_photo_url=specie.footprint_exemple_photo,
             family=family_response,
             habitats=habitats_response,
-            identifications= identification_response
+            identifications=identification_response
         )
 
     async def species_identified_to_info_responses(
@@ -107,12 +107,9 @@ class SpecieMapper:
     async def species_to_responses(self, species: list[Specie]) -> list[SpecieResponse]:
         return [await self.specie_to_response(specie) for specie in species]
 
-    async def specie_user_to_info_response(self, specie: Specie, user_id: int) -> SpecieIdentifiedResponse:
+    async def specie_user_to_info_response(self, specie: Specie, user_identifications:list[Identification], is_identified: bool) -> SpecieIdentifiedResponse:
         family_response = await self.family_mapper.family_to_response(specie.family)
         habitats_response = [await self.habitat_mapper.habitat_to_response(habitat) for habitat in specie.habitats]
-        identification_response = [
-            await self.identification_mapper.identification_to_response(identification) for identification in specie.identifications_for_user(user_id)
-        ]
 
         return SpecieIdentifiedResponse(
             id=specie.id,
@@ -126,8 +123,8 @@ class SpecieMapper:
             footprint_exemple_photo_url=specie.footprint_exemple_photo,
             family=family_response,
             habitats=habitats_response,
-            identifications= identification_response,
-            is_identified= len(identification_response) > 0
+            identifications=user_identifications,
+            is_identified=is_identified
         )
 
     async def species_user_to_info_responses(
@@ -136,6 +133,44 @@ class SpecieMapper:
         if not species:
             return []
         return [await self.specie_user_to_info_response(specie, user_id) for specie in species]
+
+
+    async def specie_with_user_identifications_to_info_responses(self, species_with_user_identifications: list[dict]) -> list[SpecieIdentifiedResponse]:
+        responses = []
+        for data in species_with_user_identifications:
+            specie = data['specie']
+            user_identifications = data['user_identifications']
+            is_identified = data['is_identified']
+
+            family_response = await self.family_mapper.family_to_response(specie.family)
+            habitats_response = [
+                await self.habitat_mapper.habitat_to_response(habitat)
+                for habitat in specie.habitats
+            ]
+            identification_response = [
+                await self.identification_mapper.identification_to_response(identification)
+                for identification in user_identifications
+            ]
+
+            response = SpecieIdentifiedResponse(
+                id=specie.id,
+                name=specie.name,
+                latin_name=specie.latin_name,
+                description=specie.description,
+                size=specie.size,
+                region=specie.region,
+                fun_fact=specie.fun_fact,
+                specie_exemple_photo_url=specie.specie_exemple_photo,
+                footprint_exemple_photo_url=specie.footprint_exemple_photo,
+                family=family_response,
+                habitats=habitats_response,
+                identifications=identification_response,
+                is_identified=is_identified
+            )
+            responses.append(response)
+
+        return responses
+
 
     async def specie_to_prediction_response(
         self, specie: Specie, probability: float
@@ -166,6 +201,8 @@ class SpecieMapper:
             await self.specie_to_prediction_response(specie, prediction.probability)
             for specie, prediction in zip(species, predictions)
         ]
+
+
 
 
 @lru_cache()
