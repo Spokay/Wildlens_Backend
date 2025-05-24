@@ -1,7 +1,9 @@
 import pytest
 
-from app.config import WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD
+from app.config import get_settings
 from app.dto.species import SpeciePrediction
+
+settings = get_settings()
 
 @pytest.mark.asyncio
 async def test_check_image_for_footprint_returns_false_when_threshold_is_not_met(
@@ -9,7 +11,7 @@ async def test_check_image_for_footprint_returns_false_when_threshold_is_not_met
         valid_image_file,
         mocker
 ):
-    threshold = WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD
+    threshold = settings.wildlens_footprint_binary_classification_threshold
 
     mock_response = mocker.Mock()
     mock_response.json.return_value = {
@@ -27,7 +29,7 @@ async def test_check_image_for_footprint_returns_true_when_threshold_is_met(
         valid_image_file,
         mocker
 ):
-    threshold = WILDLENS_FOOTPRINT_BINARY_CLASSIFICATION_THRESHOLD
+    threshold = settings.wildlens_footprint_binary_classification_threshold
 
     mock_response = mocker.Mock()
     mock_response.json.return_value = {

@@ -1,26 +1,16 @@
 import pytest
-from sqlalchemy import create_engine
-from sqlmodel import SQLModel, Session
 
-from app.database import create_db_and_tables
+from app.database import get_session, initialize_database
 from app.dto.users import AuthenticatedUser
 from app.main import app
-
-TEST_DATABASE_URL = "sqlite:///:memory:"
-test_database_engine = create_engine(TEST_DATABASE_URL)
 
 
 @pytest.fixture(scope="function")
 def test_session():
     # Creates a new database session with an in-memory DB
-    create_db_and_tables(test_database_engine)
-    with Session(test_database_engine) as session:
-        try:
-            yield session
-        finally:
-            # Clean up after the test
-            session.close()
-            SQLModel.metadata.drop_all(test_database_engine)
+    initialize_database()
+
+    return get_session()
 
 @pytest.fixture
 def client(test_session):

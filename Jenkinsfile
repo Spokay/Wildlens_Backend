@@ -4,9 +4,7 @@ pipeline {
     }
 
     environment {
-      JWT_SECRET_KEY='UneCléSecrètePourTestsCiUniquement'
-      JWT_ALGORITHM='HS256'
-      JWT_EXPIRATION_MINUTES=60
+      ENVIRONNEMENT='testing'
     }
     
     stages {
