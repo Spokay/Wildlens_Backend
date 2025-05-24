@@ -63,10 +63,11 @@ pipeline {
                 configFile(fileId: 'wildlens_grafana_env_file', targetLocation: '.env.grafana')
             ]) {
 
-            sh 'cat .env.backend'
-            sh 'cat .env.db'
-            sh 'cat .env.prediction'
-            sh 'cat .env.grafana'
+                sh 'cat .env.backend'
+                sh 'cat .env.db'
+                sh 'cat .env.prediction'
+                sh 'cat .env.grafana'
+            }
         }
     }
 
