@@ -43,17 +43,28 @@ pipeline {
             sh 'pwd'
        
             withCredentials([file(credentialsId: 'wildlens_backend_env_file', variable: 'back_env_file')]) {
-                sh "cp $back_env_file .env.backend"
-                sh 'echo ENVIRONMENT=production >> .env.backend'
+                script {
+                    def back_env_file = readFile(back_env_file)
+                    writeFile file: '.env.backend', text: back_env_file + '\nENVIRONMENT=production'
+                }
             }
             withCredentials([file(credentialsId: 'wildlens_db_env_file', variable: 'db_env_file')]) {
-                sh "cp $db_env_file .env.db"
+                script {
+                    def db_env_file = readFile(db_env_file)
+                    writeFile file: '.env.db', text: db_env_file
+                }
             }
             withCredentials([file(credentialsId: 'wildlens_prediction_env_file', variable: 'prediction_env_file')]) {
-                sh "cp $prediction_env_file .env.prediction"
+                script {
+                    def prediction_env_file = readFile(prediction_env_file)
+                    writeFile file: '.env.prediction', text: prediction_env_file
+                }
             }
             withCredentials([file(credentialsId: 'wildlens_grafana_env_file', variable: 'grafana_env_file')]) {
-                sh "cp $grafana_env_file .env.grafana"
+                script {
+                    def grafana_env_file = readFile(grafana_env_file)
+                    writeFile file: '.env.grafana', text: grafana_env_file
+                }
             }
 
             sh 'cat .env.backend'
