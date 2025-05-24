@@ -78,7 +78,7 @@ pipeline {
             script {
                 docker.withRegistry('https://registry.spokayhub.top', 'spokayhub-registry-credentials') {
                     sh 'docker compose pull'
-                    sh 'docker compose down'
+                    sh 'docker compose down --remove-orphans'
                     sh 'docker compose up -d wildlens_backend'
                 }
             }
