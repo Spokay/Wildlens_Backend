@@ -42,17 +42,17 @@ pipeline {
             )
             sh 'pwd'
        
-            withCredentials([string(credentialsId: 'wildlens_backend_env_file', variable: 'back_env_file')]) {
+            withCredentials([file(credentialsId: 'wildlens_backend_env_file', variable: 'back_env_file')]) {
                 sh 'echo $back_env_file > .env.backend'
                 sh 'echo ENVIRONMENT=production >> .env.backend'
             }
-            withCredentials([string(credentialsId: 'wildlens_db_env_file', variable: 'db_env_file')]) {
+            withCredentials([file(credentialsId: 'wildlens_db_env_file', variable: 'db_env_file')]) {
                 sh 'echo $db_env_file > .env.db'
             }
-            withCredentials([string(credentialsId: 'wildlens_prediction_env_file', variable: 'prediction_env_file')]) {
+            withCredentials([file(credentialsId: 'wildlens_prediction_env_file', variable: 'prediction_env_file')]) {
                 sh 'echo $prediction_env_file > .env.prediction'
             }
-            withCredentials([string(credentialsId: 'wildlens_grafana_env_file', variable: 'grafana_env_file')]) {
+            withCredentials([file(credentialsId: 'wildlens_grafana_env_file', variable: 'grafana_env_file')]) {
                 sh 'echo $grafana_env_file > .env.grafana'
             }
 
