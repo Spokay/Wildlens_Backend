@@ -9,8 +9,9 @@
 pip install -r requirements.txt
 ```
 
-# Minimal .env file necessary to launch the backend
+# Minimal .env file for production environment
 ```env
+ENVIRONMENT=production
 AZURE_STORAGE_ACCOUNT_NAME=
 AZURE_STORAGE_ACCOUNT_KEY=
 AZURE_STORAGE_CONTAINER_NAME=
@@ -19,7 +20,20 @@ DB_PASSWORD=
 DB_NAME=
 DB_HOST=
 DB_PORT=
-JWT_SECRET_KEY=
+WILDLENS_PREDICTION_API_KEY=
+JWT_SECRET_KEY=[MINIMUM 32 CHARACTERS]
 JWT_ALGORITHM=
 JWT_EXPIRATION_MINUTES=
+```
+
+# Minimal .env file for development environment
+```env
+AZURE_STORAGE_ACCOUNT_NAME=
+AZURE_STORAGE_ACCOUNT_KEY=
+AZURE_STORAGE_CONTAINER_NAME=
+```
+
+# Minimal .env file for testing environment
+```env
+ENVIRONMENT=testing
 ```

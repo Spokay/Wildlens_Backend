@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 
+from app.database import get_session
+
 load_dotenv()
 
 from app.config import get_settings, logger
@@ -16,12 +18,12 @@ from app.services.authentication_service import (
     AuthMiddleware,
     ExceptionHandlerLoggingMiddleware,
 )
-from app.database import create_db_and_tables, get_session, database_engine
 from app.routes import users, species, families, habitats
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
 settings = get_settings()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -35,21 +37,36 @@ async def lifespan(app: FastAPI):
         if not settings.jwt_secret_key:
             raise ValueError("JWT_SECRET_KEY missing in production")
 
-
     if settings.is_development:
-        logger.info("Creating database and tables")
-        await create_db_and_tables(engine=database_engine)
-        # TODO: create a specific method to add fake data for development mode (currently in the create_db_and_tables method)
+        pass
 
     elif settings.is_production:
         # Add any production-specific startup logic here
         pass
+
+    try:
+        from app.database import startup_database, get_database_info
+        await startup_database()
+
+        db_info = get_database_info()
+        del db_info['database_url']
+        logger.info(f"Database connection established: {db_info}")
+
+    except Exception as e:
+        logger.error(f"Database startup failed: {e}")
+        raise
 
     # Application is ready to serve requests
     yield
 
     # Shutdown logic
     logger.info("Shutting down application")
+    try:
+        from app.database import shutdown_database
+        await shutdown_database()
+    except Exception as e:
+        logger.error(f"Database shutdown error: {e}")
+
 
 def create_app():
     wildlens_app = FastAPI(root_path=settings.api_prefix, lifespan=lifespan)
@@ -68,6 +85,7 @@ def create_app():
     wildlens_app.include_router(habitats.router)
 
     return wildlens_app
+
 
 app = create_app()
 

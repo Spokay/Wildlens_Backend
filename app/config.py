@@ -84,6 +84,32 @@ class Settings(BaseSettings):
         description="Prefix for API routes"
     )
 
+    # Database Configuration
+    db_host: Optional[str] = Field(
+        default=None,
+        description="Database host"
+    )
+    db_port: int = Field(
+        default=3306,
+        description="Database port"
+    )
+    db_name: Optional[str] = Field(
+        default=None,
+        description="Database name"
+    )
+    db_user: Optional[str] = Field(
+        default=None,
+        description="Database user"
+    )
+    db_password: Optional[str] = Field(
+        default=None,
+        description="Database password"
+    )
+    db_driver: str = Field(
+        default="mariadb+pymysql",
+        description="Database driver (mariadb+pymysql, mysql+pymysql, etc.)"
+    )
+
     # Computed properties
     @property
     def project_root(self) -> pathlib.Path:
@@ -100,6 +126,19 @@ class Settings(BaseSettings):
             f"{self.api_prefix}/users/token",  # Login
             f"{self.api_prefix}/users/register"  # Register
         ]
+
+    @property
+    def is_using_memory_db(self) -> bool:
+        """Check if using in-memory database"""
+        return self.database_url == "sqlite:///:memory:"
+
+    @property
+    def database_url(self) -> str:
+        """Build database connection string dynamically"""
+        if not all([self.db_host, self.db_name, self.db_user, self.db_password]):
+            return "sqlite:///:memory:"
+
+        return f"{self.db_driver}://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
 
     @property
     def is_development(self) -> bool:
@@ -147,6 +186,13 @@ class Settings(BaseSettings):
         if not v.startswith('/'):
             v = f'/{v}'
         return v.rstrip('/')
+
+    @field_validator('db_port')
+    @classmethod
+    def validate_db_port(cls, v: int) -> int:
+        if not 1 <= v <= 65535:
+            raise ValueError('Database port must be between 1 and 65535')
+        return v
 
     # Model validator for cross-field validation (Pydantic V2)
     @model_validator(mode='after')
@@ -199,6 +245,12 @@ class TestingSettings(Settings):
     environment: str = "testing"
     debug: bool = True
     jwt_secret_key: str = "test-secret-key-12345678901234567890"
+
+    # Database configuration for testing (defaults to in-memory)
+    db_host: Optional[str] = None
+    db_name: Optional[str] = None
+    db_user: Optional[str] = None
+    db_password: Optional[str] = None
 
 
 @lru_cache()
