@@ -33,6 +33,7 @@ pipeline {
     stage('Deployment') {
 
       steps {
+        step {
             checkout scmGit(
             branches: [[name: 'master']],
             userRemoteConfigs: [
