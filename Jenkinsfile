@@ -57,9 +57,9 @@ pipeline {
             // }
 
             configFileProvider([
-                configFile(fileId: 'wildlens_backend_env_file', targetLocation: '.env.backend')
-                configFile(fileId: 'wildlens_db_env_file', targetLocation: '.env.db')
-                configFile(fileId: 'wildlens_prediction_env_file', targetLocation: '.env.prediction')
+                configFile(fileId: 'wildlens_backend_env_file', targetLocation: '.env.backend'),
+                configFile(fileId: 'wildlens_db_env_file', targetLocation: '.env.db'),
+                configFile(fileId: 'wildlens_prediction_env_file', targetLocation: '.env.prediction'),
                 configFile(fileId: 'wildlens_grafana_env_file', targetLocation: '.env.grafana')
             ]) {
 
