@@ -1,19 +1,18 @@
 pipeline {
-  agent {
-    node {
-      label 'python-3-12'
-    }
-
-  }
+  agent any
   stages {
-    stage('Checkout') {
+    stage('Testing') {
+      agent {
+        node {
+          label 'python-3-12'
+        }
+
+      }
+      environment {
+        ENVIRONMENT = 'testing'
+      }
       steps {
         checkout scm
-      }
-    }
-
-    stage('Setup Virtual Environment') {
-      steps {
         sh '''
                 rm -rf venv || true
                 
@@ -23,43 +22,23 @@ pipeline {
                 pip install --upgrade pip
                 pip install -r requirements.txt
                 
-                pip install pytest pytest-cov
-            '''
-      }
-    }
-
-    stage('Test') {
-      steps {
+                pip install pytest pytest-cov'''
         sh '''
                 . venv/bin/activate
                 
-                python3 -m pytest
-            '''
+                python3 -m pytest'''
       }
     }
 
-    stage('Build') {
-      steps {
-        sh '''
-                echo "Building application..."
-            '''
-      }
-    }
-
-    stage('Deploy') {
-      when {
-        branch 'master'
+    stage('Deployment') {
+      environment {
+        ENVIRONMENT = 'production'
       }
       steps {
-        sh '''
-                echo "Deploying to production environment..."
-            '''
+        sh 'docker ps -a'
       }
     }
 
-  }
-  environment {
-    ENVIRONNEMENT = 'testing'
   }
   post {
     success {
