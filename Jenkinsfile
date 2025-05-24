@@ -67,10 +67,7 @@ pipeline {
                 }
             }
 
-            sh 'cat .env.backend'
-            sh 'cat .env.db'
-            sh 'cat .env.prediction'
-            sh 'cat .env.grafana'
+            sh 'docker compose up -d -f docker-compose.yaml'
         }
     }
 
