@@ -39,7 +39,7 @@ async def lifespan(app: FastAPI):
     if settings.is_development:
         logger.info("Creating database and tables")
         await create_db_and_tables(engine=database_engine)
-        # TODO: create a specific method to add fake data for development mode
+        # TODO: create a specific method to add fake data for development mode (currently in the create_db_and_tables method)
 
     elif settings.is_production:
         # Add any production-specific startup logic here
