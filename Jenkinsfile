@@ -66,8 +66,11 @@ pipeline {
                     writeFile file: '.env.grafana', text: grafana_env_file
                 }
             }
-
-            sh 'docker compose up -d -f docker-compose.yaml'
+            docker.withRegistry('https://registry.spokayhub.top', 'spokayhub-registry-credentials') {
+                sh 'docker compose pull'
+                sh 'docker compose down'
+                sh 'docker compose up -d -f docker-compose.yaml'
+            }
         }
     }
 
