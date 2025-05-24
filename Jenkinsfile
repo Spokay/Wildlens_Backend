@@ -32,9 +32,6 @@ pipeline {
 
     stage('Deployment') {
 
-      environment {
-        ENVIRONMENT = 'production'
-      }
       steps {
         checkout scmGit(
           branches: [[name: 'master']],
@@ -47,9 +44,10 @@ pipeline {
         sh 'pwd'
       }
       steps {
-        sh "pwd"
+        sh 'pwd'
         withCredentials([string(credentialsId: 'wildlens_backend_env_file', variable: 'back_env_file')]) {
             sh 'echo $back_env_file > .env.backend'
+            sh 'echo ENVIRONMENT=production >> .env.backend'
         }
         withCredentials([string(credentialsId: 'wildlens_db_env_file', variable: 'db_env_file')]) {
             sh 'echo $db_env_file > .env.db'
@@ -61,10 +59,10 @@ pipeline {
             sh 'echo $grafana_env_file > .env.grafana'
         }
 
-        sh "cat .env.backend"
-        sh "cat .env.db"
-        sh "cat .env.prediction"
-        sh "cat .env.grafana"
+        sh 'cat .env.backend'
+        sh 'cat .env.db'
+        sh 'cat .env.prediction'
+        sh 'cat .env.grafana'
       }
     }
 
