@@ -22,7 +22,7 @@ settings = get_settings()
 def create_database_engine():
     conn_string = settings.database_url
 
-    logger.info(f"Creating database engine: {conn_string}")
+    logger.info(f"Creating database engine")
     return create_engine(conn_string, connect_args={"check_same_thread": False})
 
 
