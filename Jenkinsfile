@@ -77,9 +77,9 @@ pipeline {
             sh 'chmod 644 .env.backend .env.db .env.prediction .env.grafana'
             script {
                 docker.withRegistry('https://registry.spokayhub.top', 'spokayhub-registry-credentials') {
-                    sh 'docker container rm -f wildlens_prediction mariadb_wildlens wildlens_backend || true'
                     sh 'docker compose pull'
-                    sh 'docker compose down --remove-orphans'
+                    sh 'docker compose stop wildlens_backend'
+                    sh 'docker compose down wildlens_backend --remove-orphans'
                     sh 'docker compose up -d wildlens_backend'
                 }
             }
