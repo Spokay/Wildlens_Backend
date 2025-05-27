@@ -23,7 +23,10 @@ def create_database_engine():
     conn_string = settings.database_url
 
     logger.info(f"Creating database engine")
-    return create_engine(conn_string, connect_args={"check_same_thread": False})
+    if settings.is_using_local_db:
+        return create_engine(conn_string, connect_args={"check_same_thread": False})
+
+    return create_engine(conn_string)
 
 
 engine = create_database_engine()
