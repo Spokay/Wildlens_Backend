@@ -49,6 +49,7 @@ def initialize_database():
         create_tables(engine)
         seed_data()
     elif settings.is_production:
+        create_tables(engine)
         logger.info("Production: Database ready")
     elif settings.environment == "testing":
         create_tables(engine)
@@ -80,7 +81,7 @@ def get_database_info():
 
 
 def create_tables(database_engine):
-    logger.info("Creating database and tables")
+    logger.info("Creating database and tables if necessary")
     SQLModel.metadata.create_all(
         database_engine,
         tables=[
