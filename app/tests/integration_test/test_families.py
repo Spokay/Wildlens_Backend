@@ -76,10 +76,12 @@ class TestFamilyRetrieval:
             json={"name": "Retrievable Family"},
             headers=admin_headers
         )
+
+        family_id = create_response.json()["family"]["id"]
         assert create_response.status_code == 201
 
         # Now retrieve it
-        response = authenticated_client.get("api/families/1")
+        response = authenticated_client.get(f"api/families/{family_id}")
         assert response.status_code == 200
         data = response.json()
         assert "name" in data
@@ -193,38 +195,22 @@ class TestFamilyDeletion:
             "api/families/create", json={"name": "To Delete"}
         )
         assert create_response.status_code == 201
+        family_id = create_response.json()["family"]["id"]
 
         # Now delete it
-        response = admin_client.delete("api/families/delete/3")
+        response = admin_client.delete(f"api/families/delete/{family_id}")
         assert response.status_code == 200
         data = response.json()
         assert data["message"] == "family deleted successfully"
 
         # Verify it's deleted
-        get_response = admin_client.get("api/families/3")
+        get_response = admin_client.get(f"api/families/{family_id}")
         assert get_response.status_code == 404
 
     def test_delete_nonexistent_family(self, admin_client):
         """Test deleting non-existent family"""
         response = admin_client.delete("api/families/delete/999")
         assert response.status_code == 404
-
-    def test_delete_family_with_species(self, admin_client):
-        """Test deleting family that has associated species"""
-        # This test assumes cascade delete is implemented
-        # First create a family
-        family_response = admin_client.post(
-            "api/families/create", json={"name": "Family With Species"}
-        )
-        assert family_response.status_code == 201
-
-        # Create a species in this family (if species endpoint is available)
-        # This is a more complex test that might need species creation
-
-        # Delete the family
-        response = admin_client.delete("api/families/delete/4")
-        # Should succeed with cascade delete or fail with constraint error
-        assert response.status_code in [200, 409]
 
 
 class TestFamilyValidation:

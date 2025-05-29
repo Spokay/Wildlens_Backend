@@ -146,9 +146,10 @@ class TestSpeciesManagement:
                 "size": "Medium",
                 "region": "Test Region",
                 "fun_fact": "This is a test",
-                "specie_exemple_photo": "http://example.com/photo.jpg",
-                "footprint_exemple_photo": "http://example.com/footprint.jpg",
-                "family_id": 1
+                "specie_exemple_photo_url": "http://example.com/photo.jpg",
+                "footprint_exemple_photo_url": "http://example.com/footprint.jpg",
+                "family_id": 1,
+                "habitats_ids": [1]
             }
         )
         assert response.status_code == 401
@@ -164,9 +165,10 @@ class TestSpeciesManagement:
                 "size": "Medium",
                 "region": "Test Region",
                 "fun_fact": "This is a test",
-                "specie_exemple_photo": "http://example.com/photo.jpg",
-                "footprint_exemple_photo": "http://example.com/footprint.jpg",
-                "family_id": 1
+                "specie_exemple_photo_url": "http://example.com/photo.jpg",
+                "footprint_exemple_photo_url": "http://example.com/footprint.jpg",
+                "family_id": 1,
+                "habitats_ids": [1]
             }
         )
         assert response.status_code == 403
@@ -182,14 +184,15 @@ class TestSpeciesManagement:
                 "size": "Medium",
                 "region": "Test Region",
                 "fun_fact": "This is a test",
-                "specie_exemple_photo": "http://example.com/photo.jpg",
-                "footprint_exemple_photo": "http://example.com/footprint.jpg",
-                "family_id": 1
+                "specie_exemple_photo_url": "http://example.com/photo.jpg",
+                "footprint_exemple_photo_url": "http://example.com/footprint.jpg",
+                "family_id": 1,
+                "habitats_ids": [1]
             }
         )
         assert response.status_code == 201
         data = response.json()
-        assert data["message"] == "specie created successfully"
+        assert data["message"] == "Species created successfully"
 
     def test_create_specie_missing_fields(self, admin_client):
         """Test creating species with missing required fields"""
@@ -226,7 +229,7 @@ class TestSpeciesManagement:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["message"] == "specie updated successfully"
+        assert data["message"] == "Species updated successfully"
 
     def test_update_nonexistent_specie(self, admin_client):
         """Test updating non-existent species"""
@@ -258,9 +261,10 @@ class TestSpeciesManagement:
                 "size": "Small",
                 "region": "Delete Region",
                 "fun_fact": "Will be gone",
-                "specie_exemple_photo": "http://example.com/delete.jpg",
-                "footprint_exemple_photo": "http://example.com/delete_foot.jpg",
-                "family_id": 1
+                "specie_exemple_photo_url": "http://example.com/delete.jpg",
+                "footprint_exemple_photo_url": "http://example.com/delete_foot.jpg",
+                "family_id": 1,
+                "habitats_ids": [1]
             }
         )
         assert create_response.status_code == 201
@@ -269,7 +273,7 @@ class TestSpeciesManagement:
         response = admin_client.delete("api/species/delete/2")
         assert response.status_code == 200
         data = response.json()
-        assert data["message"] == "specie deleted successfully"
+        assert data["message"] == "Species deleted successfully"
 
     def test_delete_nonexistent_specie(self, admin_client):
         """Test deleting non-existent species"""
