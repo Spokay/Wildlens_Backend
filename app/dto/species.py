@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlmodel import SQLModel
 from typing import Optional, Union
 
@@ -60,32 +60,32 @@ class SpecieClassificationResponse(BaseModel):
 class UploadInfo(BaseModel):
     specie_id: int
     user_id: int
-    image_file_name: str
-    tmp_file_path: str
+    image_file_name: str = Field(..., min_length=2, description="Image file name must be at least 2 characters")
+    tmp_file_path: str = Field(..., min_length=2, description="Temporary file path must be at least 2 characters")
 
 
 class CreateSpecieInfo(BaseModel):
-    name: str
-    latin_name: str
-    description: str
-    size: str
-    region: str
-    fun_fact: str
-    specie_exemple_photo_url: str
-    footprint_exemple_photo_url: str
+    name: str = Field(..., min_length=2, description="Species name must be at least 2 characters")
+    latin_name: str = Field(..., min_length=2, description="Latin name must be at least 2 characters")
+    description: str = Field(..., min_length=2, description="Description must be at least 2 characters")
+    size: str = Field(..., min_length=2, description="Size must be at least 2 characters")
+    region: str = Field(..., min_length=2, description="Region must be at least 2 characters")
+    fun_fact: str = Field(..., min_length=2, description="Fun fact must be at least 2 characters")
+    specie_exemple_photo_url: str = Field(..., min_length=2, description="Species example photo URL must be at least 2 characters")
+    footprint_exemple_photo_url: str = Field(..., min_length=2, description="Footprint example photo URL must be at least 2 characters")
     family_id: int
     habitats_ids: list[int]
 
 
 class UpdateSpecieInfo(BaseModel):
-    name: Optional[str] = None
-    latin_name: Optional[str] = None
-    description: Optional[str] = None
-    size: Optional[str] = None
-    region: Optional[str] = None
-    fun_fact: Optional[str] = None
-    specie_exemple_photo_url: Optional[str] = None
-    footprint_exemple_photo_url: Optional[str] = None
+    name: Optional[str] = Field(None, min_length=2, description="Species name must be at least 2 characters")
+    latin_name: Optional[str] = Field(None, min_length=2, description="Latin name must be at least 2 characters")
+    description: Optional[str] = Field(None, min_length=2, description="Description must be at least 2 characters")
+    size: Optional[str] = Field(None, min_length=2, description="Size must be at least 2 characters")
+    region: Optional[str] = Field(None, min_length=2, description="Region must be at least 2 characters")
+    fun_fact: Optional[str] = Field(None, min_length=2, description="Fun fact must be at least 2 characters")
+    specie_exemple_photo_url: Optional[str] = Field(None, min_length=2, description="Species example photo URL must be at least 2 characters")
+    footprint_exemple_photo_url: Optional[str] = Field(None, min_length=2, description="Footprint example photo URL must be at least 2 characters")
     family_id: Optional[int] = None
     habitats_ids: Optional[list[int]] = None
 

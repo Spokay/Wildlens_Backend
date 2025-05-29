@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from sqlmodel import SQLModel
 import datetime as dt
@@ -17,14 +17,14 @@ class AuthenticatedUser(BaseModel):
     role_name: str
 
 class RegisterRequest(BaseModel):
-    email: str
-    password: str
-    username: str
+    email: str = Field(..., min_length=2, pattern=r'^[^@]+@[^@]+\.[^@]+$', description="Valid email address required")
+    password: str = Field(..., min_length=2, description="Password must be at least 2 characters")
+    username: str = Field(..., min_length=2, description="Username must be at least 2 characters")
 
 class UpdateUserInfo(BaseModel):
-    username: Optional[str] = None
-    email: Optional[str] = None
-    profile_picture : Optional[str] = None
+    username: Optional[str] = Field(None, min_length=2, description="Username must be at least 2 characters")
+    email: Optional[str] = Field(None, min_length=2, pattern=r'^[^@]+@[^@]+\.[^@]+$', description="Valid email address required")
+    profile_picture: Optional[str] = Field(None, min_length=2, description="Profile picture URL must be at least 2 characters")
 
 class UpdateUserResponse(BaseModel):
     message: str
