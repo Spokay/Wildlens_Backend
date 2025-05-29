@@ -2,11 +2,12 @@ import os
 from contextlib import asynccontextmanager
 from typing import Any, Generator
 import tempfile
+from pathlib import Path
 
 from sqlalchemy import create_engine, inspect
 
-from app.database import create_tables, drop_tables
-from app.models import User, Role
+from app.database import create_tables, drop_tables, get_session
+from app.models import User, Role, Family, Habitat, Specie
 from app.services.user_service import get_password_hash
 
 os.environ["ENVIRONMENT"] = "testing"
@@ -137,6 +138,16 @@ def client(test_session, override_get_session):
 
 def clear_existing_data(test_session):
     try:
+        # Clear in order to respect foreign key constraints
+        for specie in test_session.exec(select(Specie)).all():
+            test_session.delete(specie)
+            
+        for habitat in test_session.exec(select(Habitat)).all():
+            test_session.delete(habitat)
+            
+        for family in test_session.exec(select(Family)).all():
+            test_session.delete(family)
+
         for user in test_session.exec(select(User)).all():
             test_session.delete(user)
 
@@ -177,6 +188,49 @@ def create_test_users(test_session):
     test_session.commit()
 
 
+def create_test_families(test_session):
+    """Create test families for species tests"""
+    family1 = Family(id=1, name="Test Family 1")
+    family2 = Family(id=2, name="Test Family 2")
+    
+    test_session.add(family1)
+    test_session.add(family2)
+    test_session.commit()
+
+
+def create_test_habitats(test_session):
+    """Create test habitats for species tests"""
+    habitat1 = Habitat(id=1, name="Forest", habitat_photo="http://example.com/forest.jpg")
+    habitat2 = Habitat(id=2, name="Ocean", habitat_photo="http://example.com/ocean.jpg")
+    
+    test_session.add(habitat1)
+    test_session.add(habitat2)
+    test_session.commit()
+
+
+def create_test_species(test_session):
+    """Create test species for testing retrieval endpoints"""
+    # Get the habitats that were just created
+    habitats = test_session.exec(select(Habitat)).all()
+    
+    specie1 = Specie(
+        id=1,
+        name="Test Species 1",
+        latin_name="Testus speciesus",
+        description="A test species for testing",
+        size="Medium",
+        region="Test Region",
+        fun_fact="This is a test species",
+        specie_exemple_photo="http://example.com/species1.jpg",
+        footprint_exemple_photo="http://example.com/footprint1.jpg",
+        family_id=1,
+        habitats=[habitats[0]] if habitats else []
+    )
+    
+    test_session.add(specie1)
+    test_session.commit()
+
+
 def verify_test_setup(test_session):
     user_count = len(test_session.exec(select(User)).all())
     role_count = len(test_session.exec(select(Role)).all())
@@ -192,6 +246,9 @@ def setup_test_data(test_session):
     clear_existing_data(test_session)
     create_test_roles(test_session)
     create_test_users(test_session)
+    create_test_families(test_session)
+    create_test_habitats(test_session)
+    create_test_species(test_session)
     verify_test_setup(test_session)
 
 

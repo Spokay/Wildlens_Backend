@@ -119,6 +119,7 @@ class Settings(BaseSettings):
         return [
             "/metrics",  # Prometheus metrics
             "/docs",  # Swagger UI
+            "/config/info",  # Configuration info endpoint
             f"{self.api_prefix}/openapi.json",  # OpenAPI schema
             f"{self.api_prefix}/users/token",  # Login
             f"{self.api_prefix}/users/register"  # Register

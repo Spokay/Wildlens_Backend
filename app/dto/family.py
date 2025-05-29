@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlmodel import SQLModel
 from typing import Optional
 
@@ -9,11 +9,11 @@ class FamilyResponse(SQLModel):
 
 
 class CreateFamilyInfo(BaseModel):
-    name: str
+    name: str = Field(..., min_length=2, description="Family name must be at least 2 characters")
 
 
 class UpdateFamilyInfo(BaseModel):
-    name: Optional[str] = None
+    name: Optional[str] = Field(None, min_length=2, description="Family name must be at least 2 characters")
 
 class CreateFamilyResponse(BaseModel):
     message: str
