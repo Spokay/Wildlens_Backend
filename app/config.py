@@ -15,7 +15,11 @@ class Settings(BaseSettings):
     # Environment
     environment: str = Field(default="development", description="Runtime environment")
     debug: bool = Field(default=True, description="Debug mode")
-    app_port: int = Field(default=8002, description="Application port")
+    app_port: int = Field(
+        default=8002,
+        description="Application port",
+        validation_alias="APP_PORT"
+    )
 
     # Prediction API - Wildlens
     wildlens_footprint_binary_classification_threshold: float = Field(
@@ -198,6 +202,17 @@ class Settings(BaseSettings):
         if self.environment == 'production':
             if not self.jwt_secret_key:
                 raise ValueError('JWT_SECRET_KEY is required in production')
+            if not self.wildlens_prediction_api_base_url:
+                raise ValueError('WILDLENS_PREDICTION_API_BASE_URL is required in production')
+            if not self.wildlens_prediction_api_key:
+                raise ValueError('WILDLENS_PREDICTION_API_KEY is required in production')
+            if not self.azure_storage_account_name:
+                raise ValueError('AZURE_STORAGE_ACCOUNT_NAME is required in production')
+            if not self.azure_storage_account_key:
+                raise ValueError('AZURE_STORAGE_ACCOUNT_KEY is required in production')
+            if not self.azure_storage_container_name:
+                raise ValueError('AZURE_STORAGE_CONTAINER_NAME is required in production')
+
         return self
 
     # Pydantic settings configuration

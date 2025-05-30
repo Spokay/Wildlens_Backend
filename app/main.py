@@ -30,19 +30,6 @@ async def lifespan(app: FastAPI):
     # Startup logic
     logger.info(f"Starting application in {settings.environment} mode")
 
-    # Validating required configurations
-    if settings.is_production:
-        if not settings.wildlens_prediction_api_key:
-            raise ValueError("WILDLENS_PREDICTION_API_KEY missing in production")
-        if not settings.jwt_secret_key:
-            raise ValueError("JWT_SECRET_KEY missing in production")
-
-    if settings.is_development:
-        pass
-
-    elif settings.is_production:
-        pass
-
     try:
         from app.database import startup_database, get_database_info
         await startup_database()
