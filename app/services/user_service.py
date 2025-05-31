@@ -112,24 +112,10 @@ async def update_user(
 ) -> UserResponse:
     user_to_update: User = await get_user_by_id(session, user_id)
 
-    user_with_same_username: Optional[User] = await get_user_by_username_or_email(
-        session, new_user_info.username
-    )
-    user_with_same_email: Optional[User] = await get_user_by_username_or_email(
-        session, new_user_info.email
-    )
+    # Check if the user is trying to update the informations of another user
+    await verify_email_taken(session, new_user_info, user_to_update)
+    await verify_username_taken(session, new_user_info, user_to_update)
 
-    if user_with_same_email and user_with_same_email.id != user_to_update.id:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="email already taken",
-        )
-
-    if user_with_same_username and user_with_same_username.id != user_to_update.id:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="username already taken",
-        )
     updated_user = await update_user_fields(session, new_user_info, user_to_update)
     return await user_mapper.user_to_response(updated_user)
 
@@ -144,3 +130,34 @@ async def delete_user(
     session.delete(user_to_delete)
     session.commit()
     return response
+
+
+async def verify_email_taken(
+        session: Session,
+        new_user_info: UpdateUserInfo,
+        user_to_update: User
+) -> None:
+    user_with_same_email: Optional[User] = await get_user_by_username_or_email(
+        session, new_user_info.email
+    )
+
+    if user_with_same_email and user_with_same_email.id != user_to_update.id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="email already taken",
+        )
+
+async def verify_username_taken(
+        session: Session,
+        new_user_info: UpdateUserInfo,
+        user_to_update: User
+) -> None:
+    user_with_same_username: Optional[User] = await get_user_by_username_or_email(
+        session, new_user_info.username
+    )
+
+    if user_with_same_username and user_with_same_username.id != user_to_update.id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="username already taken",
+        )
