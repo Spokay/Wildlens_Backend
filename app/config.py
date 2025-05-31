@@ -15,7 +15,11 @@ class Settings(BaseSettings):
     # Environment
     environment: str = Field(default="development", description="Runtime environment")
     debug: bool = Field(default=True, description="Debug mode")
-    app_port: int = Field(default=8002, description="Application port")
+    app_port: int = Field(
+        default=8002,
+        description="Application port",
+        validation_alias="APP_PORT"
+    )
 
     # Prediction API - Wildlens
     wildlens_footprint_binary_classification_threshold: float = Field(
@@ -119,6 +123,7 @@ class Settings(BaseSettings):
         return [
             "/metrics",  # Prometheus metrics
             "/docs",  # Swagger UI
+            "/config/info",  # Configuration info endpoint
             f"{self.api_prefix}/openapi.json",  # OpenAPI schema
             f"{self.api_prefix}/users/token",  # Login
             f"{self.api_prefix}/users/register"  # Register
@@ -142,6 +147,10 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"
+
+    @property
+    def is_testing(self) -> bool:
+        return self.environment.lower() == "testing"
 
     # Pydantic V2 field validators
     @field_validator('environment')
@@ -193,6 +202,17 @@ class Settings(BaseSettings):
         if self.environment == 'production':
             if not self.jwt_secret_key:
                 raise ValueError('JWT_SECRET_KEY is required in production')
+            if not self.wildlens_prediction_api_base_url:
+                raise ValueError('WILDLENS_PREDICTION_API_BASE_URL is required in production')
+            if not self.wildlens_prediction_api_key:
+                raise ValueError('WILDLENS_PREDICTION_API_KEY is required in production')
+            if not self.azure_storage_account_name:
+                raise ValueError('AZURE_STORAGE_ACCOUNT_NAME is required in production')
+            if not self.azure_storage_account_key:
+                raise ValueError('AZURE_STORAGE_ACCOUNT_KEY is required in production')
+            if not self.azure_storage_container_name:
+                raise ValueError('AZURE_STORAGE_CONTAINER_NAME is required in production')
+
         return self
 
     # Pydantic settings configuration
@@ -213,6 +233,20 @@ class DevelopmentSettings(Settings):
 
     # Default values for development
     jwt_secret_key: str = "dev-secret-key-1234567891234567890"
+
+    azure_storage_account_name: str = Field(..., description="Azure account name required in development")
+    azure_storage_account_key: str = Field(..., description="Azure account key required in development")
+    azure_storage_container_name: str = Field(..., description="Azure container name required in development")
+
+    # Optional values for development
+    wildlens_prediction_api_base_url: Optional[str] = Field(
+        default=None,
+        description="Wildlens prediction API base URL (optional in development)"
+    )
+    wildlens_prediction_api_key: Optional[str] = Field(
+        default=None,
+        description="Wildlens API key (optional in development)"
+    )
 
 
 class ProductionSettings(Settings):
@@ -252,8 +286,33 @@ def get_settings() -> Settings:
     environment = os.getenv("ENVIRONMENT", "development").lower()
 
     if environment == "production":
-        return ProductionSettings()
+        # Production settings require specific environment variables
+        wildlens_prediction_api_base_url = os.getenv("WILDLENS_PREDICTION_API_BASE_URL")
+        wildlens_prediction_api_key = os.getenv("WILDLENS_PREDICTION_API_KEY")
+        azure_storage_account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
+        azure_storage_account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
+        azure_storage_container_name = os.getenv("AZURE_STORAGE_CONTAINER_NAME")
+        jwt_secret_key = os.getenv("JWT_SECRET_KEY")
+        return ProductionSettings(
+            wildlens_prediction_api_base_url=wildlens_prediction_api_base_url,
+            wildlens_prediction_api_key=wildlens_prediction_api_key,
+            jwt_secret_key=jwt_secret_key,
+            azure_storage_account_name=azure_storage_account_name,
+            azure_storage_account_key=azure_storage_account_key,
+            azure_storage_container_name=azure_storage_container_name
+        )
     elif environment == "testing":
         return TestingSettings()
     else:
-        return DevelopmentSettings()
+        wildlens_prediction_api_base_url = os.getenv("WILDLENS_PREDICTION_API_BASE_URL")
+        wildlens_prediction_api_key = os.getenv("WILDLENS_PREDICTION_API_KEY")
+        azure_storage_account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
+        azure_storage_account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
+        azure_storage_container_name = os.getenv("AZURE_STORAGE_CONTAINER_NAME")
+        return DevelopmentSettings(
+            wildlens_prediction_api_base_url=wildlens_prediction_api_base_url,
+            wildlens_prediction_api_key=wildlens_prediction_api_key,
+            azure_storage_account_name=azure_storage_account_name,
+            azure_storage_account_key=azure_storage_account_key,
+            azure_storage_container_name=azure_storage_container_name
+        )

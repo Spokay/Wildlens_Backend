@@ -1,14 +1,18 @@
-import os
 import uuid
 from datetime import datetime, timedelta, UTC
 from functools import lru_cache
+from typing import Optional
 
-from PIL.ImageFile import ImageFile
 from azure.storage.blob import generate_blob_sas, BlobSasPermissions
 from azure.storage.blob.aio import BlobServiceClient, ContainerClient
 from fastapi import UploadFile, HTTPException
 
+from app.config import get_settings, logger
+
+settings = get_settings()
+
 BASE_PATH_IMAGES = "images/"
+
 
 
 async def create_file_name(file: UploadFile) -> str:
@@ -22,28 +26,33 @@ async def add_base_path_to_file_name(file_name: str) -> str:
 
 class AzureBlobService:
     def __init__(self,
-                 account_name: str,
-                 account_key: str,
-                 container_name: str,
+                 account_name: Optional[str] = None,
+                 account_key: Optional[str] = None,
+                 container_name: Optional[str] = None
     ):
+        if all([account_name, account_key, container_name]):
+            logger.info("Initializing AzureBlobService with provided credentials.")
+            self.account_name = account_name
+            self.account_key = account_key
+            # Azure Blob storage client initialization
+            try:
+                self.container_name = container_name
 
-        self.account_name = account_name
-        self.account_key = account_key
-        # Azure Blob storage client initialization
-        try:
-            self.container_name = container_name
+                self.connection_string = (
+                    f"DefaultEndpointsProtocol=https;AccountName={account_name};"
+                    f"AccountKey={account_key};EndpointSuffix=core.windows.net"
+                )
 
-            self.connection_string = (
-                f"DefaultEndpointsProtocol=https;AccountName={account_name};"
-                f"AccountKey={account_key};EndpointSuffix=core.windows.net"
-            )
+                self.blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
 
-            self.blob_service_client = BlobServiceClient.from_connection_string(self.connection_string)
+                self.container_client: ContainerClient = self.blob_service_client.get_container_client(self.container_name)
 
-            self.container_client: ContainerClient = self.blob_service_client.get_container_client(self.container_name)
+            except Exception as ex:
+                logger.error(f"Error initializing AzureBlobService: {ex}")
+                raise Exception(f"Error initializing AzureBlobService: {ex}")
 
-        except Exception as ex:
-            raise Exception(f"Error initializing AzureBlobService: {ex}")
+        else:
+            logger.info("No credentials provided. the AzureBlobService will not be functional.")
 
     async def ensure_container_exists(self):
         try:
@@ -92,8 +101,11 @@ class AzureBlobService:
 
 @lru_cache()
 def get_azure_blob_service():
-    return AzureBlobService(
-        account_name=os.getenv('AZURE_STORAGE_ACCOUNT_NAME'),
-        account_key=os.getenv('AZURE_STORAGE_ACCOUNT_KEY'),
-        container_name=os.getenv('AZURE_STORAGE_CONTAINER_NAME')
-    )
+    if settings.is_testing:
+        return AzureBlobService()
+    else:
+        return AzureBlobService(
+            account_name=settings.azure_storage_account_name,
+            account_key=settings.azure_storage_account_key,
+            container_name=settings.azure_storage_container_name
+        )
