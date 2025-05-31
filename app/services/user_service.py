@@ -115,6 +115,15 @@ async def update_user(
     user_with_same_username: Optional[User] = await get_user_by_username_or_email(
         session, new_user_info.username
     )
+    user_with_same_email: Optional[User] = await get_user_by_username_or_email(
+        session, new_user_info.email
+    )
+
+    if user_with_same_email and user_with_same_email.id != user_to_update.id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="email already taken",
+        )
 
     if user_with_same_username and user_with_same_username.id != user_to_update.id:
         raise HTTPException(
