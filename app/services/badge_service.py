@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 
 from app.config import get_settings
 from app.dto.badge import BadgeResponse
-from app.models import Badge, UserBadge, Identification, BadgeCriteria
+from app.models import Badge, UserBadge, Identification, BadgeCriteria, Specie, SpecieHabitat
 
 settings = get_settings()
 
@@ -88,6 +88,37 @@ async def evaluate_identification_count_by_specie(user_id: int, criteria: Dict[s
 
     return identification_count >= required
 
+
+async def evaluate_all_species_identified_by_habitat(user_id: int, criteria: Dict[str, Any], session: Session) -> bool:
+    required_habitat = criteria.get("habitat")
+
+    if not required_habitat:
+        return False
+
+    # Get all species in the specified habitat
+    all_species_in_habitat_statement = (
+        select(count())
+        .select_from(Specie)
+        .join(SpecieHabitat, Specie.id == SpecieHabitat.specie_id)
+        .where(SpecieHabitat.habitat_id == required_habitat)
+    )
+
+    total_species_in_habitat = session.exec(all_species_in_habitat_statement).one()
+
+    # Get count of species the user has identified in this habitat
+    user_identified_species_statement = (
+        select(count())
+        .distinct(Identification.specie_id)
+        .select_from(Identification)
+        .join(SpecieHabitat, Identification.specie_id == SpecieHabitat.specie_id)
+        .where(Identification.user_id == user_id)
+        .where(SpecieHabitat.habitat_id == required_habitat)
+    )
+
+    user_identified_count = session.exec(user_identified_species_statement).one()
+
+    return user_identified_count == total_species_in_habitat
+
 async def evaluate_all_specied_identified(user_id: int, session: Session) -> bool:
 
     statement = select(count()).distinct(Identification.specie_id).where(Identification.user_id == user_id)
@@ -101,6 +132,9 @@ async def evaluate_criteria(user_id: int, criteria: Dict[str, Any], session: Ses
     # criterias evaluation
     if criteria_type == "identification_count_by_specie":
         return await evaluate_identification_count_by_specie(user_id, criteria, session)
+
+    if criteria_type == "all_species_identified_by_habitat":
+        return await evaluate_all_species_identified_by_habitat(user_id, criteria, session)
 
     if criteria_type == "all_species_identified":
         return await evaluate_all_specied_identified(user_id, session)
