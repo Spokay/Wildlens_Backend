@@ -92,7 +92,7 @@ async def get_identified_specie_by_user(
 
     specie = await get_specie_by_class_number(specie_id, session)
 
-    identifications = get_user_identifications_for_given_species(user_id, [specie], session)
+    identifications = await get_user_identifications_for_given_species(user_id, [specie], session)
 
     return await specie_mapper.specie_identified_to_info_response(specie, identifications)
 
