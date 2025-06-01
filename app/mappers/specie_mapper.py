@@ -68,11 +68,11 @@ class SpecieMapper:
             habitats=habitats_response,
         )
 
-    async def specie_identified_to_info_response(self, specie: Specie) -> SpecieIdentifiedResponse:
+    async def specie_identified_to_info_response(self, specie: Specie, identifications: list[Identification]) -> SpecieIdentifiedResponse:
         family_response = await self.family_mapper.family_to_response(specie.family)
         habitats_response = [await self.habitat_mapper.habitat_to_response(habitat) for habitat in specie.habitats]
         identification_response = [
-            await self.identification_mapper.identification_to_response(identification) for identification in specie.identifications
+            await self.identification_mapper.identification_to_response(identification) for identification in identifications
         ]
 
         return SpecieIdentifiedResponse(
@@ -89,13 +89,6 @@ class SpecieMapper:
             habitats=habitats_response,
             identifications=identification_response
         )
-
-    async def species_identified_to_info_responses(
-        self, species: tuple[Specie]
-    ) -> list[SpecieIdentifiedResponse]:
-        if not species:
-            return []
-        return [await self.specie_identified_to_info_response(specie) for specie in species]
 
     async def species_to_basic_info_responses(
         self, species: list[Specie]
