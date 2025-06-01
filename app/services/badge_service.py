@@ -39,6 +39,7 @@ async def get_user_badges(user_id: int, session : Session) -> list[BadgeResponse
                     id=badge.id,
                     name=badge.name,
                     description=badge.description,
+                    badge_image=badge.badge_image,
                     date_awarded=user_badge.date_awarded
                 )
             )

@@ -7,3 +7,4 @@ class BadgeResponse(SQLModel):
     name: str
     description: str | None
     date_awarded: dt.datetime
+    badge_image: str | None
