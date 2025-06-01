@@ -59,7 +59,6 @@ class SpecieClassificationResponse(BaseModel):
 
 class UploadInfo(BaseModel):
     specie_id: int
-    user_id: int
     image_file_name: str = Field(..., min_length=2, description="Image file name must be at least 2 characters")
     tmp_file_path: str = Field(..., min_length=2, description="Temporary file path must be at least 2 characters")
 
