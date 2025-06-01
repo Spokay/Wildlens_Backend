@@ -36,7 +36,8 @@ def mock_badge_already_received_response(mock_badge_already_received):
         id=mock_badge_already_received.id,
         name=mock_badge_already_received.name,
         description=mock_badge_already_received.description,
-        date_awarded=datetime.now()
+        date_awarded=datetime.now(),
+        badge_image="https://example.com/badge.jpg"
     )
 
 @pytest.fixture
@@ -63,4 +64,4 @@ def mock_badge_or_criteria():
 
 @pytest.fixture
 def mock_identification():
-    return Identification(user_id=1, specie_id=1)
+    return Identification(user_id=1, specie_id=1, file_storage_key="example.jpg")
