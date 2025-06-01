@@ -109,23 +109,28 @@ async def predict_image_class(
 @router.post(
     "/upload_identification",
     description="Upload an identification to the blob storage",
-    response_model=dict[str, str],
     status_code=status.HTTP_200_OK,
 )
 async def upload_identification(
     upload_info: UploadInfo,
     azure_blob_service: Annotated[AzureBlobService, Depends(get_azure_blob_service)],
+    current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
     session: Session = Depends(get_session),
-) -> dict[str, str]:
+) -> JSONResponse:
     await upload_blob_from_temp_file(upload_info, azure_blob_service)
 
     file_storage_key = await add_base_path_to_file_name(upload_info.image_file_name)
 
     await save_identification(
-        session, upload_info.user_id, upload_info.specie_id, file_storage_key
+        session, current_user.user_id, upload_info.specie_id, file_storage_key
     )
 
-    return {"message": "Identification enregistrée avec succès"}
+    return JSONResponse(
+        content={
+            "message": "Identification enregistrée avec succès",
+        },
+        status_code=status.HTTP_200_OK,
+    )
 
 
 @router.get(
