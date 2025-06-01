@@ -89,22 +89,12 @@ async def save_identification(
 async def get_identified_specie_by_user(
         user_id: int, specie_id: int, session: Session, specie_mapper: SpecieMapper
 ) -> SpecieIdentifiedResponse:
-    statement = (
-        select(Specie)
-        .join(Identification)
-        .where(Identification.user_id == user_id)
-        .where(Identification.specie_id == specie_id)
-        .order_by(Identification.date_identified)
-    )
 
-    response = session.exec(statement).first()
-    if not response:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Vous n'avez pas identifié cette espèce ou l'espèce n'existe pas"
-        )
+    specie = await get_specie_by_class_number(specie_id, session)
 
-    return await specie_mapper.specie_identified_to_info_response(response)
+    identifications = await get_user_identifications_for_given_species(user_id, [specie], session)
+
+    return await specie_mapper.specie_identified_to_info_response(specie, identifications)
 
 
 async def _get_species_with_user_data(
