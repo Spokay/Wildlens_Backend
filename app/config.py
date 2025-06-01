@@ -44,7 +44,11 @@ class Settings(BaseSettings):
     )
 
     # Prediction configuration
-    number_of_classes: int = Field(default=1, description="Number of classes for prediction")
+    number_of_classes: int = Field(
+        default=13,
+        description="Number of classes for prediction",
+        validation_alias="NUMBER_OF_CLASSES"
+    )
 
     # JWT Configuration
     jwt_secret_key: Optional[str] = Field(
@@ -293,6 +297,8 @@ def get_settings() -> Settings:
         azure_storage_account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
         azure_storage_container_name = os.getenv("AZURE_STORAGE_CONTAINER_NAME")
         jwt_secret_key = os.getenv("JWT_SECRET_KEY")
+        number_of_classes = os.getenv("NUMBER_OF_CLASSES")
+
         return ProductionSettings(
             wildlens_prediction_api_base_url=wildlens_prediction_api_base_url,
             wildlens_prediction_api_key=wildlens_prediction_api_key,
