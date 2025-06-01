@@ -39,7 +39,7 @@ async def get_user_badges(user_id: int, session : Session) -> list[BadgeResponse
                     id=badge.id,
                     name=badge.name,
                     description=badge.description,
-                    badge_image=badge.badge_image,
+                    badge_image=badge.badge_image or None,
                     date_awarded=user_badge.date_awarded
                 )
             )
@@ -54,7 +54,13 @@ async def get_badges_already_received(user_id: int, session: Session) -> list[Ba
     badges = session.exec(badges_statement).all()
 
     return [
-        BadgeResponse(id=badge.id, name=badge.name, description=badge.description, date_awarded=date_awarded)
+        BadgeResponse(
+            id=badge.id,
+            name=badge.name,
+            description=badge.description,
+            badge_image=badge.badge_image or None,
+            date_awarded=date_awarded
+        )
         for badge, date_awarded in badges
     ]
 
