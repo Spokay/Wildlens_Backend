@@ -109,7 +109,6 @@ async def predict_image_class(
 @router.post(
     "/upload_identification",
     description="Upload an identification to the blob storage",
-    response_model=JSONResponse,
     status_code=status.HTTP_200_OK,
 )
 async def upload_identification(
