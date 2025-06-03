@@ -150,7 +150,6 @@ async def get_identified_species_by_user(
         select(Specie)
         .join(Identification)
         .where(Identification.user_id == user_id)
-        .order_by(Identification.date_identified)
         .group_by(Specie.id)
     )
 
