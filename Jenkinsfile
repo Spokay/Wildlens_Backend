@@ -57,17 +57,18 @@ pipeline {
                     ]]
                 )
 
-                sh '''
-                    ls -la
-
-                    chmod 755 .
-                '''
+                sh 'chmod 755 wildlens_prediction/get_model_file.sh'
 
                 sh 'wildlens_prediction/get_model_file.sh'
 
                 sh 'pwd'
+                sh '''
+                    ls -la
 
-                sh 'rm -f .env.backend .env.db .env.prediction .env.grafana'
+                    chmod 755 .
+
+                    rm -f .env.backend .env.db .env.prediction .env.grafana
+                '''
                 withCredentials(bindings: [file(credentialsId: 'wildlens_backend_env_file', variable: 'back_env_file')]) {
                     script {
                         def back_env_file = readFile(back_env_file)
