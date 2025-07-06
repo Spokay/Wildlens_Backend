@@ -33,8 +33,14 @@ pipeline {
 
         stage('Deployment') {
             steps {
+                cleanWs()
+
                 checkout scmGit(
                     branches: [[name: 'master']],
+                    extensions: [
+                        cleanBeforeCheckout(),
+                        timeout(time: 20, unit: 'MINUTES')
+                    ],
                     userRemoteConfigs: [[
                         url: 'https://github.com/Spokay/Wildlens_CICD.git',
                         credentialsId: 'jenkins-spokay-github-credential'
