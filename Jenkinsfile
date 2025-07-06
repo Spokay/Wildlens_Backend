@@ -56,7 +56,11 @@ pipeline {
                         credentialsId: 'jenkins-spokay-github-credential'
                     ]]
                 )
+
+                sh 'wildlens_prediction/get_model_file.sh'
+
                 sh 'pwd'
+
                 sh '''
                     ls -la
 
