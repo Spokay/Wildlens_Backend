@@ -11,7 +11,19 @@ pipeline {
                 ENVIRONMENT = 'testing'
             }
             steps {
-                checkout scm
+                cleanWs()
+
+                checkout scmGit(
+                    branches: [[name: 'prod']],
+                    extensions: [
+                        cleanBeforeCheckout(),
+                        timeout(time: 20, unit: 'MINUTES')
+                    ],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/Spokay/Wildlens_Backend.git',
+                        credentialsId: 'jenkins-spokay-github-credential'
+                    ]]
+                )
                 sh '''
                     rm -rf venv || true
 
