@@ -50,7 +50,6 @@ pipeline {
                     branches: [[name: 'master']],
                     extensions: [
                         cleanBeforeCheckout(),
-                        timeout(time: 20, unit: 'MINUTES')
                     ],
                     userRemoteConfigs: [[
                         url: 'https://github.com/Spokay/Wildlens_CICD.git',
